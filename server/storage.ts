@@ -240,7 +240,7 @@ export class DatabaseStorage implements IStorage {
       {
         userId,
         broker: 'bybit',
-        referralUrl: `https://partner.bybit.com/b/${this.generateReferralCode().toLowerCase()}`,
+        referralUrl: 'https://partner.bybit.com/b/119776',
       },
       {
         userId,
@@ -452,7 +452,7 @@ export class MemoryStorage implements IStorage {
       {
         userId,
         broker: 'bybit',
-        referralUrl: `https://partner.bybit.com/b/${this.generateReferralCode().toLowerCase()}`,
+        referralUrl: 'https://partner.bybit.com/b/119776',
       },
       {
         userId,
