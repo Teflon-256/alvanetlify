@@ -61,8 +61,8 @@ export default function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6" data-testid="hero-title">
-                Elite Trading
-                <span className="gradient-text block">Capital Management</span>
+                Alva Capital
+                <span className="gradient-text block">Account Management</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed" data-testid="hero-description">
                 Connect your trading accounts to our master copier system, track performance, and earn through our exclusive referral program. Experience premium capital management.
@@ -303,7 +303,7 @@ export default function Landing() {
           </div>
           
           <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p data-testid="footer-copyright">&copy; 2024 AlvaCapital. All rights reserved. | Trading involves risk and may not be suitable for all investors.</p>
+            <p data-testid="footer-copyright">&copy; 2025 AlvaCapital. All rights reserved. | Trading involves risk and may not be suitable for all investors.</p>
           </div>
         </div>
       </footer>
