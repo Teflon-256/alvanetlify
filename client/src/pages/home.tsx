@@ -34,8 +34,7 @@ import {
 // Form schemas
 const connectAccountSchema = z.object({
   broker: z.enum(['exness', 'bybit', 'binance']),
-  accountId: z.string().min(1, "Account ID is required"),
-  accountName: z.string().min(1, "Account name is required"),
+  accountId: z.string().min(1, "Account Number is required"),
 });
 
 type ConnectAccountForm = z.infer<typeof connectAccountSchema>;
@@ -99,7 +98,6 @@ export default function Home() {
     defaultValues: {
       broker: 'exness',
       accountId: '',
-      accountName: '',
     },
   });
 
@@ -378,22 +376,9 @@ export default function Home() {
                             name="accountId"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Account ID</FormLabel>
+                                <FormLabel>Account Number</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Enter your account ID" {...field} data-testid="account-id-input" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={connectForm.control}
-                            name="accountName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Account Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Give your account a name" {...field} data-testid="account-name-input" />
+                                  <Input placeholder="Enter your account number" {...field} data-testid="account-number-input" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -491,30 +476,37 @@ export default function Home() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Referral Links */}
-            <Card className="premium-card" data-testid="referral-links-card">
+            {/* Create Trading Account */}
+            <Card className="premium-card" data-testid="create-trading-account-card">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">Referral Links</CardTitle>
+                <CardTitle className="text-xl font-semibold">Create Trading Account</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Click on a broker below to create a new trading account using your referral link:
+                  </p>
                   {dashboardData?.referralLinks?.map((link: any) => (
-                    <div key={link.id} className="bg-muted/30 rounded-lg p-4" data-testid={`referral-link-${link.broker}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium capitalize">{link.broker}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyReferralLink(link.referralUrl)}
-                          data-testid={`copy-link-${link.broker}`}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                    <Button
+                      key={link.id}
+                      variant="outline"
+                      className="w-full justify-between h-auto p-4 bg-muted/30 hover:bg-muted/50 border-primary/20"
+                      onClick={() => window.open(link.referralUrl, '_blank')}
+                      data-testid={`create-account-${link.broker}`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 ${brokerIcons[link.broker as keyof typeof brokerIcons]?.color} rounded-lg flex items-center justify-center`}>
+                          <span className={`font-bold ${brokerIcons[link.broker as keyof typeof brokerIcons]?.textColor}`}>
+                            {brokerIcons[link.broker as keyof typeof brokerIcons]?.icon}
+                          </span>
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium capitalize">{link.broker}</div>
+                          <div className="text-xs text-muted-foreground">Create new account</div>
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground break-all">
-                        {link.referralUrl}
-                      </div>
-                    </div>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
                   ))}
                 </div>
               </CardContent>
