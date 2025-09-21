@@ -30,6 +30,7 @@ import {
   Bot,
   Award
 } from "lucide-react";
+import { SiBinance } from "react-icons/si";
 
 // Form schemas
 const connectAccountSchema = z.object({
@@ -204,9 +205,29 @@ export default function Home() {
   }
 
   const brokerIcons = {
-    exness: { icon: "EX", color: "bg-orange-500", textColor: "text-white" },
-    bybit: { icon: "BY", color: "bg-yellow-500", textColor: "text-white" },
-    binance: { icon: "BN", color: "bg-yellow-400", textColor: "text-black" }
+    exness: { 
+      icon: () => (
+        <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
+          <span className="text-xs font-bold text-orange-600">EX</span>
+        </div>
+      ), 
+      color: "bg-gradient-to-br from-orange-500 to-orange-600", 
+      textColor: "text-white" 
+    },
+    bybit: { 
+      icon: () => (
+        <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
+          <span className="text-xs font-bold text-amber-500">BY</span>
+        </div>
+      ), 
+      color: "bg-gradient-to-br from-amber-500 to-yellow-500", 
+      textColor: "text-white" 
+    },
+    binance: { 
+      icon: () => <SiBinance className="w-6 h-6 text-yellow-500" />, 
+      color: "bg-gradient-to-br from-yellow-400 to-amber-400", 
+      textColor: "text-black" 
+    }
   };
 
   return (
@@ -415,9 +436,7 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className={`w-10 h-10 ${brokerIcons[account.broker as keyof typeof brokerIcons]?.color} rounded-lg flex items-center justify-center`}>
-                              <span className={`font-bold ${brokerIcons[account.broker as keyof typeof brokerIcons]?.textColor}`}>
-                                {brokerIcons[account.broker as keyof typeof brokerIcons]?.icon}
-                              </span>
+                              {brokerIcons[account.broker as keyof typeof brokerIcons]?.icon()}
                             </div>
                             <div>
                               <div className="font-semibold">{account.accountName}</div>
@@ -496,9 +515,7 @@ export default function Home() {
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`w-10 h-10 ${brokerIcons[link.broker as keyof typeof brokerIcons]?.color} rounded-lg flex items-center justify-center`}>
-                          <span className={`font-bold ${brokerIcons[link.broker as keyof typeof brokerIcons]?.textColor}`}>
-                            {brokerIcons[link.broker as keyof typeof brokerIcons]?.icon}
-                          </span>
+                          {brokerIcons[link.broker as keyof typeof brokerIcons]?.icon()}
                         </div>
                         <div className="text-left">
                           <div className="font-medium capitalize">{link.broker}</div>
@@ -522,8 +539,8 @@ export default function Home() {
                   <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bot className="text-primary h-8 w-8" />
                   </div>
-                  <div className="text-lg font-semibold mb-2">AI Trading Bot</div>
-                  <div className="text-sm text-muted-foreground">Automated copy trading system</div>
+                  <div className="text-lg font-semibold mb-2">Origins and Balances V1.2</div>
+                  <div className="text-sm text-muted-foreground">Advanced algorithmic trading system</div>
                 </div>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
