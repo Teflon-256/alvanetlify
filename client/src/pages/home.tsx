@@ -31,6 +31,7 @@ import {
   Award
 } from "lucide-react";
 import { SiBinance } from "react-icons/si";
+import futuristicExchange from "@assets/generated_images/Futuristic_stock_exchange_wallpaper_8045bc0a.png";
 
 // Form schemas
 const connectAccountSchema = z.object({
@@ -231,9 +232,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative">
+      {/* Futuristic Background */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-5 z-0"
+        style={{
+          backgroundImage: `url(${futuristicExchange})`,
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 z-0"></div>
       {/* Navigation */}
-      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
@@ -269,13 +278,13 @@ export default function Home() {
       </nav>
 
       {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="mb-8">
           <h1 className="text-3xl lg:text-4xl font-serif font-bold gradient-text mb-2" data-testid="dashboard-title">
             Welcome Back, {user.firstName || 'Trader'}
           </h1>
           <p className="text-muted-foreground" data-testid="dashboard-subtitle">
-            Manage your accounts, track performance, and grow your referral network
+            Advanced trading management. Simplified.
           </p>
         </div>
 
@@ -294,7 +303,7 @@ export default function Home() {
               <div className="text-2xl font-bold mb-1" data-testid="total-balance">
                 ${dashboardData?.totalBalance || '0.00'}
               </div>
-              <div className="text-sm text-muted-foreground">Total Portfolio</div>
+              <div className="text-sm text-muted-foreground">Portfolio Value</div>
             </CardContent>
           </Card>
           
@@ -328,7 +337,7 @@ export default function Home() {
               <div className="text-2xl font-bold mb-1" data-testid="referral-count">
                 {dashboardData?.referralCount || 0}
               </div>
-              <div className="text-sm text-muted-foreground">Active Referrals</div>
+              <div className="text-sm text-muted-foreground">Referrals</div>
             </CardContent>
           </Card>
           
@@ -345,7 +354,7 @@ export default function Home() {
               <div className="text-2xl font-bold mb-1" data-testid="referral-earnings">
                 ${dashboardData?.referralEarnings || '0.00'}
               </div>
-              <div className="text-sm text-muted-foreground">Referral Earnings</div>
+              <div className="text-sm text-muted-foreground">Earnings</div>
             </CardContent>
           </Card>
         </div>
@@ -356,7 +365,7 @@ export default function Home() {
             <Card className="premium-card" data-testid="connected-accounts-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-semibold">Connected Trading Accounts</CardTitle>
+                  <CardTitle className="text-xl font-semibold">Trading Accounts</CardTitle>
                   <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-primary hover:bg-primary/90" data-testid="connect-account-button">
@@ -498,12 +507,12 @@ export default function Home() {
             {/* Create Trading Account */}
             <Card className="premium-card" data-testid="create-trading-account-card">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">Create Trading Account</CardTitle>
+                <CardTitle className="text-xl font-semibold">Start Trading</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground mb-4">
-                    Click on a broker below to create a new trading account using your referral link:
+                    Begin your trading journey with these trusted platforms.
                   </p>
                   {dashboardData?.referralLinks?.map((link: any) => (
                     <Button
@@ -519,7 +528,7 @@ export default function Home() {
                         </div>
                         <div className="text-left">
                           <div className="font-medium capitalize">{link.broker}</div>
-                          <div className="text-xs text-muted-foreground">Create new account</div>
+                          <div className="text-xs text-muted-foreground">Start trading</div>
                         </div>
                       </div>
                       <ExternalLink className="h-4 w-4" />
