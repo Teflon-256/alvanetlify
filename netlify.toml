@@ -1,0 +1,3 @@
+[build]
+  command = "npm run build"  # This runs your build recipe
+  publish = "dist"  # Or "build" if that's your output folder—check after Step 4
