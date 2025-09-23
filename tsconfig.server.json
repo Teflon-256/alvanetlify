@@ -7,15 +7,16 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "bundler",
     "types": ["node"],
     "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["./shared/*"]
     },
     "typeRoots": ["./node_modules/@types"]
   },
   "include": ["server/**/*", "shared/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
