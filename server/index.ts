@@ -1,5 +1,5 @@
 import express from "express";
-import registerRoutes from "./routes";
+import { router as registerRoutes } from "./routes";
 import { setupAuth } from "./replitAuth";
 import serverless from "serverless-http";
 
