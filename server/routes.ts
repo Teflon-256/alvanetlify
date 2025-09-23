@@ -1,19 +1,21 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTradingAccountSchema, insertReferralEarningSchema, insertMasterCopierConnectionSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Auth middleware
   await setupAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -25,8 +27,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard data endpoint
   app.get('/api/dashboard', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       // Get all dashboard data in parallel
       const [
         tradingAccounts,
@@ -60,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         referralCount: referralCount.count,
         referralEarnings: totalEarnings.total,
         tradingAccounts,
-        recentReferralEarnings: referralEarnings.slice(0, 5), // Latest 5 earnings
+        recentReferralEarnings: referralEarnings.slice(0, 5),
         masterCopierConnections,
         referralLinks
       });
@@ -73,7 +78,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trading account routes
   app.post('/api/trading-accounts', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const validation = insertTradingAccountSchema.safeParse(req.body);
       
       if (!validation.success) {
@@ -92,7 +100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/trading-accounts/:accountId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { accountId } = req.params;
       
       await storage.deleteTradingAccount(accountId, userId);
@@ -103,7 +114,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update account balance (for future API integration)
   app.patch('/api/trading-accounts/:accountId/balance', isAuthenticated, async (req: any, res) => {
     try {
       const { accountId } = req.params;
@@ -124,7 +134,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Master copier routes
   app.post('/api/master-copier/connect', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const validation = insertMasterCopierConnectionSchema.safeParse(req.body);
       
       if (!validation.success) {
@@ -175,7 +188,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Referral link tracking
   app.post('/api/referral-links/:linkId/click', async (req, res) => {
     try {
       const { linkId } = req.params;
@@ -187,10 +199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Copy referral link endpoint
   app.get('/api/referral-links/:broker', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { broker } = req.params;
       
       const links = await storage.getReferralLinks(userId);
@@ -206,7 +220,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch referral link" });
     }
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }
