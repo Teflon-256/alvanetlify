@@ -1,4 +1,3 @@
-```typescript
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 import passport from "passport";
@@ -105,7 +104,7 @@ export async function setupAuth(app: Express) {
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || "alvacapital.online";
   const strategy = new Strategy(
     {
-      name: `replitauth:${domain}`,
+      name: "replitauth:" + domain,
       config,
       scope: "openid email profile offline_access",
       callbackURL: `https://${domain}/api/callback`,
@@ -178,4 +177,3 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
-```
