@@ -1,5 +1,4 @@
 import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/build/passport";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -87,7 +86,7 @@ export async function setupAuth(app: Express) {
     return;
   }
 
-  const verify: VerifyFunction = async (
+  const verify = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
@@ -102,16 +101,17 @@ export async function setupAuth(app: Express) {
   };
 
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || "alvacapital.online";
-  const strategy = new Strategy(
+  const strategy = new client.Strategy(
     {
-      name: "replitauth:" + domain,
-      config,
-      scope: "openid email profile offline_access",
-      callbackURL: `https://${domain}/api/callback`,
+      client: config.client,
+      params: {
+        scope: "openid email profile offline_access",
+        callbackURL: `https://${domain}/api/callback`,
+      },
     },
     verify
   );
-  passport.use(strategy);
+  passport.use(`replitauth:${domain}`, strategy);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
