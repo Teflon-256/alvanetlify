@@ -28,7 +28,7 @@ export const sessions = pgTable(
 
 // User storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const users = pgTable("users", {
+export const users: any = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
@@ -107,7 +107,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.referredBy],
     references: [users.id],
   }),
-})) as { [key: string]: any }; // Explicitly type to avoid implicit any
+}) as any);
 
 export const tradingAccountsRelations = relations(tradingAccounts, ({ one, many }) => ({
   user: one(users, {
