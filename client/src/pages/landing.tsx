@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartLine, Link, Bot, Users, Shield, Headphones, TrendingUp, Zap, DollarSign } from "lucide-react";
-import futuristicWallStreet from "../../attached_assets/generated_images/Futuristic_Wall_Street_9156e3fe.png";
+import futuristicWallStreet from "/assets/Futuristic_Wall_Street_9156e3fe.png";
 
 export default function Landing() {
   const handleGetStarted = () => {
