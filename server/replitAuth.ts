@@ -1,4 +1,4 @@
-import * as client from "openid-client";
+import { Issuer, Strategy } from "openid-client";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -13,10 +13,13 @@ if (!process.env.REPLIT_DOMAINS) {
 const getOidcConfig = memoize(
   async () => {
     try {
-      return await client.discovery(
-        new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-        process.env.REPL_ID ?? ""
-      );
+      const issuer = await Issuer.discover(process.env.ISSUER_URL ?? "https://replit.com/oidc");
+      return {
+        client: new issuer.Client({
+          client_id: process.env.REPL_ID ?? "",
+          client_secret: process.env.REPL_SECRET ?? "",
+        }),
+      };
     } catch (error) {
       console.error("Error discovering OIDC config:", error);
       throw new Error("Failed to initialize authentication");
@@ -49,12 +52,12 @@ export function getSession() {
 
 function updateUserSession(
   user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
+  tokens: { claims: () => any; access_token: string; refresh_token?: string; expires_at?: number }
 ) {
   user.claims = tokens.claims();
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
-  user.expires_at = tokens.claims()?.exp;
+  user.expires_at = tokens.expires_at;
 }
 
 async function upsertUser(claims: any) {
@@ -87,7 +90,7 @@ export async function setupAuth(app: Express) {
   }
 
   const verify = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
+    tokens: any,
     verified: passport.AuthenticateCallback
   ) => {
     try {
@@ -101,7 +104,7 @@ export async function setupAuth(app: Express) {
   };
 
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || "alvacapital.online";
-  const strategy = new client.Strategy(
+  const strategy = new Strategy(
     {
       client: config.client,
       params: {
@@ -137,10 +140,9 @@ export async function setupAuth(app: Express) {
         return next(err);
       }
       try {
-        const redirectUrl = client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID || "",
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href;
+        const redirectUrl = config.client.issuer.end_session_endpoint
+          ? new URL(config.client.issuer.end_session_endpoint).href + `?client_id=${process.env.REPL_ID || ""}&post_logout_redirect_uri=${req.protocol}://${req.hostname}`
+          : "/";
         res.redirect(redirectUrl);
       } catch (error) {
         console.error("Error building logout URL:", error);
@@ -169,7 +171,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   try {
     const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+    const tokenResponse = await config.client.refresh(refreshToken);
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
