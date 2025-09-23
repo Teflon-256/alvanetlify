@@ -8,13 +8,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node16",
-    "types": ["node", "@neondatabase/serverless"],
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["shared/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./node_modules/@neondatabase/serverless"]
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules"]
