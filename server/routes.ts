@@ -14,9 +14,8 @@ import {
   type InsertReferralLink,
 } from "@shared/schema";
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
 
-const router = Router();
+export const router = Router();
 
 // User routes
 router.get("/user", isAuthenticated, async (req: Request, res: Response) => {
@@ -276,5 +275,3 @@ router.post("/trading-accounts", validate(tradingAccountSchema), router.post("/t
 router.post("/referral-earnings", validate(referralEarningSchema), router.post("/referral-earnings"));
 router.post("/master-copier-connections", validate(masterCopierConnectionSchema), router.post("/master-copier-connections"));
 router.post("/referral-links", validate(referralLinkSchema), router.post("/referral-links"));
-
-export default router;
