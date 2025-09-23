@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "esnext",
+    "module": "Node16",
     "outDir": "dist",
-    "rootDir": "server",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node16",
     "types": ["node", "@neondatabase/serverless"],
-    "typeRoots": ["./node_modules/@types", "./node_modules/openid-client/build"],
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["shared/*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./node_modules/@neondatabase/serverless"]
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules"]
