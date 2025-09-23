@@ -10,7 +10,7 @@ import {
   integer,
   boolean,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, type InferSelectModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -107,7 +107,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.referredBy],
     references: [users.id],
   }),
-}));
+})) as { [key: string]: any }; // Explicitly type to avoid implicit any
 
 export const tradingAccountsRelations = relations(tradingAccounts, ({ one, many }) => ({
   user: one(users, {
