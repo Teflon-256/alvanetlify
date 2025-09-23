@@ -7,13 +7,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node16",
     "types": ["node", "@neondatabase/serverless"],
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["shared/*"]
-    }
+    "allowSyntheticDefaultImports": true
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules"]
