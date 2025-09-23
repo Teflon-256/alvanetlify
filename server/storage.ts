@@ -1,4 +1,3 @@
-```typescript
 import {
   users,
   tradingAccounts,
@@ -168,7 +167,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), 0)::text`
+          total: sql`COALESCE(SUM(${referralEarnings.amount}), 0)::text`
         })
         .from(referralEarnings)
         .where(and(
@@ -325,4 +324,3 @@ export class DatabaseStorage implements IStorage {
 
 // Use database storage in production, memory storage as fallback
 export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemoryStorage();
-```
