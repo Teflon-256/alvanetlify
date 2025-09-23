@@ -5,7 +5,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import MemoryStore from "memorystore";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 
 if (!process.env.REPLIT_DOMAINS) {
   console.warn("Environment variable REPLIT_DOMAINS not provided, using default domain");
