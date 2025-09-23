@@ -1,6 +1,6 @@
 import express from "express";
-import { router as registerRoutes } from "./routes";
-import { setupAuth } from "./replitAuth";
+import { router as registerRoutes } from "./routes.js";
+import { setupAuth } from "./replitAuth.js";
 import serverless from "serverless-http";
 
 const app = express();
