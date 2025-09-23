@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartLine, Link, Bot, Users, Shield, Headphones, TrendingUp, Zap, DollarSign } from "lucide-react";
-import futuristicWallStreet from "@assets/generated_images/Futuristic_Wall_Street_9156e3fe.png";
+import futuristicWallStreet from "/assets/Futuristic_Wall_Street_9156e3fe.png";
 
 export default function Landing() {
   const handleGetStarted = () => {
-    window.location.href = "/api/login";
+    window.location.href = '/.netlify/functions/index/api/login';
   };
 
   return (
@@ -127,7 +127,7 @@ export default function Landing() {
                         { name: "Bybit", icon: "BY", balance: "$32,100.15", pnl: "+1.87%", color: "bg-yellow-500" },
                         { name: "Binance", icon: "BN", balance: "$48,100.15", pnl: "+3.12%", color: "bg-yellow-400" }
                       ].map((broker, index) => (
-                        <div key={broker.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg" data-testid={`preview-broker-${broker.name.toLowerCase()}`}>
+                        <div key={broker.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg" data-testid={`preview-broker-${broker.name.toLowerCase().replace(/\s+/g, '-')}`}>
                           <div className="flex items-center space-x-3">
                             <div className={`w-8 h-8 ${broker.color} rounded-full flex items-center justify-center`}>
                               <span className={`text-xs font-bold ${broker.name === "Binance" ? "text-black" : "text-white"}`}>{broker.icon}</span>
