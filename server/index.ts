@@ -1,5 +1,5 @@
 import express from "express";
-import { router as registerRoutes } from "./routes.js";
+import { router } from "./routes.js";
 import { setupAuth } from "./replitAuth.js";
 import serverless from "serverless-http";
 
@@ -9,7 +9,7 @@ app.use(express.json());
 
 (async () => {
   await setupAuth(app);
-  registerRoutes(app);
+  app.use(router); // Use the router directly
 })();
 
 export const handler = serverless(app);
