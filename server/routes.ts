@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { storage } from "./storage";
-import { isAuthenticated } from "./replitAuth";
+import { storage } from "./storage.js";
+import { isAuthenticated } from "./replitAuth.js";
 import {
   type User,
   type TradingAccount,
