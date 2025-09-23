@@ -7,10 +7,15 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "types": ["node", "@neondatabase/serverless"],
-    "allowSyntheticDefaultImports": true
+    "typeRoots": ["./node_modules/@types", "./node_modules/openid-client/build"],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["server/**/*"],
+  "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules"]
 }
