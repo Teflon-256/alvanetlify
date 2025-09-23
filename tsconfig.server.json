@@ -8,7 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "types": ["node", "@neondatabase/serverless"]
+    "types": ["node", "@neondatabase/serverless"],
+    "allowSyntheticDefaultImports": true
   },
   "include": ["server/**/*"],
   "exclude": ["node_modules"]
