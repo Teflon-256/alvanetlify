@@ -322,5 +322,130 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+export class MemoryStorage implements IStorage {
+  private users: Map<string, User> = new Map();
+  private tradingAccounts: Map<string, TradingAccount> = new Map();
+  private referralEarnings: Map<string, ReferralEarning> = new Map();
+  private masterCopierConnections: Map<string, MasterCopierConnection> = new Map();
+  private referralLinks: Map<string, ReferralLink> = new Map();
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    if (!userData.referralCode) {
+      userData.referralCode = randomBytes(4).toString('hex').toUpperCase();
+    }
+    const user: User = { ...userData, createdAt: new Date(), updatedAt: new Date() };
+    this.users.set(user.id, user);
+    await this.createDefaultReferralLinks(user.id);
+    return user;
+  }
+
+  async getTradingAccounts(userId: string): Promise<TradingAccount[]> {
+    return Array.from(this.tradingAccounts.values()).filter(acc => acc.userId === userId);
+  }
+
+  async createTradingAccount(account: InsertTradingAccount): Promise<TradingAccount> {
+    const newAccount: TradingAccount = { ...account, id: nanoid(), createdAt: new Date(), updatedAt: new Date() };
+    this.tradingAccounts.set(newAccount.id, newAccount);
+    return newAccount;
+  }
+
+  async updateTradingAccountBalance(accountId: string, balance: string, dailyPnL: string): Promise<void> {
+    const account = this.tradingAccounts.get(accountId);
+    if (account) {
+      account.balance = balance;
+      account.dailyPnL = dailyPnL;
+      account.lastSyncAt = new Date();
+      account.updatedAt = new Date();
+    }
+  }
+
+  async deleteTradingAccount(accountId: string, userId: string): Promise<void> {
+    const account = this.tradingAccounts.get(accountId);
+    if (account && account.userId === userId) {
+      this.tradingAccounts.delete(accountId);
+    }
+  }
+
+  async getReferralEarnings(userId: string): Promise<ReferralEarning[]> {
+    return Array.from(this.referralEarnings.values()).filter(earning => earning.referrerId === userId);
+  }
+
+  async createReferralEarning(earning: InsertReferralEarning): Promise<ReferralEarning> {
+    const newEarning: ReferralEarning = { ...earning, id: nanoid(), createdAt: new Date(), updatedAt: new Date() };
+    this.referralEarnings.set(newEarning.id, newEarning);
+    return newEarning;
+  }
+
+  async getTotalReferralEarnings(userId: string): Promise<{ total: string }> {
+    const earnings = Array.from(this.referralEarnings.values())
+      .filter(e => e.referrerId === userId && e.status === 'paid');
+    const total = earnings.reduce((sum, e) => sum + parseFloat(e.amount), 0).toFixed(2);
+    return { total };
+  }
+
+  async getReferralCount(userId: string): Promise<{ count: number }> {
+    const referredUserIds = new Set(
+      Array.from(this.referralEarnings.values())
+        .filter(e => e.referrerId === userId)
+        .map(e => e.referredUserId)
+    );
+    return { count: referredUserIds.size };
+  }
+
+  async getMasterCopierConnections(userId: string): Promise<MasterCopierConnection[]> {
+    return Array.from(this.masterCopierConnections.values()).filter(conn => conn.userId === userId);
+  }
+
+  async createMasterCopierConnection(connection: InsertMasterCopierConnection): Promise<MasterCopierConnection> {
+    const newConnection: MasterCopierConnection = { ...connection, id: nanoid(), createdAt: new Date(), updatedAt: new Date() };
+    this.masterCopierConnections.set(newConnection.id, newConnection);
+    return newConnection;
+  }
+
+  async updateMasterCopierStatus(connectionId: string, isActive: boolean): Promise<void> {
+    const connection = this.masterCopierConnections.get(connectionId);
+    if (connection) {
+      connection.isActive = isActive;
+      connection.updatedAt = new Date();
+    }
+  }
+
+  async getReferralLinks(userId: string): Promise<ReferralLink[]> {
+    return Array.from(this.referralLinks.values()).filter(link => link.userId === userId);
+  }
+
+  async createReferralLink(link: InsertReferralLink): Promise<ReferralLink> {
+    const newLink: ReferralLink = { ...link, id: nanoid(), createdAt: new Date(), updatedAt: new Date(), clickCount: 0, conversionCount: 0 };
+    this.referralLinks.set(newLink.id, newLink);
+    return newLink;
+  }
+
+  async updateReferralLinkStats(linkId: string, clicks?: number, conversions?: number): Promise<void> {
+    const link = this.referralLinks.get(linkId);
+    if (link) {
+      if (clicks !== undefined) link.clickCount = (link.clickCount || 0) + clicks;
+      if (conversions !== undefined) link.conversionCount = (link.conversionCount || 0) + conversions;
+      link.updatedAt = new Date();
+    }
+  }
+
+  private async createDefaultReferralLinks(userId: string): Promise<void> {
+    const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
+    const defaultLinks = [
+      { userId, broker: 'exness', referralUrl: `https://one.exness.link/a/${randomBytes(4).toString('hex').toLowerCase()}` },
+      { userId, broker: 'bybit', referralUrl: 'https://partner.bybit.com/b/119776' },
+      { userId, broker: 'binance', referralUrl: `https://accounts.binance.com/register?ref=${randomBytes(4).toString('hex').toUpperCase()}` },
+    ];
+
+    for (const link of defaultLinks) {
+      await this.createReferralLink(link);
+    }
+  }
+}
+
 // Use database storage in production, memory storage as fallback
 export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemoryStorage();
