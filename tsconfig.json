@@ -1,15 +1,21 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "esnext",
+    "module": "Node16",
     "outDir": "dist",
-    "rootDir": "server",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
-    "types": ["node", "@neondatabase/serverless"],
-    "allowSyntheticDefaultImports": true
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    },
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules"]
