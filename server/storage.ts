@@ -15,7 +15,7 @@ import {
   type ReferralLink,
   type InsertReferralLink,
 } from "@shared/schema";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { nanoid } from "nanoid";
