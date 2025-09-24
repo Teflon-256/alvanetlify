@@ -553,20 +553,3 @@ export class MemoryStorage implements IStorage {
         isActive: true, 
         simplified code to avoid TypeScript errors caused by the database's UUID generator.
 
-### Instructions (Like You’re 5)
-The toy builder (`tsc`) got upset because:
-1. Some toy boxes (`id` fields in `createDefaultReferralLinks`) were labeled as strings, but the database wanted special UUID labels.
-2. A toy sorter (query in `upsertUser`) was confused about how to sort toys due to Neon’s special rules.
-We fixed `storage.ts` by letting the database make its own special IDs for referral links and teaching the sorter how to handle Neon’s toys. Save the file, commit with the message:
-- `server/storage.ts`: `Let database handle referral link IDs and fix upsertUser typing`
-Push to GitHub, redeploy on Netlify, and check the build log. Visit your site (e.g., `https://your-site.netlify.app`) if it works! 😊
-
-### Additional Notes
-- **Line number consistency**: Errors (55, 59, 418) match previous logs, pointing to `upsertUser` and `createDefaultReferralLinks`.
-- **package.json**: No changes needed; the log shows 6 packages added, 1 removed, 2 changed, consistent with prior builds.
-- **schema.ts**: Still correct, as no schema-related errors appear.
-- **Environment variables**: Ensure `REPL_ID`, `REPL_SECRET`, `REPLIT_DOMAINS`, `SESSION_SECRET`, and `DATABASE_URL` are set in Netlify’s environment variables (Site Settings > Environment Variables).
-- **Browserslist warning**: Run `npx update-browserslist-db@latest` locally and commit `package-lock.json` changes, though this isn’t critical.
-- **If the build fails**: Share the new log. Potential issues could include `tsconfig.server.json` misconfiguration, schema mismatches, or runtime errors (e.g., missing environment variables).
-
-If you need help with the next build log or further issues, share them!
