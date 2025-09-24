@@ -258,3 +258,70 @@ router.post("/referral-links", isAuthenticated, async (req: Request, res: Respon
     res.status(201).json(link);
   } catch (error) {
     console.error("Error creating referral link:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.put("/referral-links/:id", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: No user ID found" });
+    }
+    const { id } = req.params;
+    const { clicks, conversions } = req.body;
+    await storage.updateReferralLinkStats(id, clicks, conversions);
+    res.json({ message: "Referral link stats updated successfully" });
+  } catch (error) {
+    console.error("Error updating referral link stats:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Input validation middleware
+const validate = (schema: z.ZodSchema) => (req: Request, res: Response, next: Function) => {
+  try {
+    schema.parse(req.body);
+    next();
+  } catch (error) {
+    res.status(400).json({ message: "Invalid request data", error });
+  }
+};
+
+// Example schemas for validation
+const userSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  profileImageUrl: z.string().optional(),
+});
+
+const tradingAccountSchema = z.object({
+  broker: z.enum(["exness", "bybit", "binance"]),
+  accountNumber: z.string(),
+  balance: z.string(),
+  dailyPnL: z.string().optional(),
+});
+
+const referralEarningSchema = z.object({
+  referredUserId: z.string(),
+  amount: z.string(),
+  status: z.enum(["pending", "paid"]),
+});
+
+const masterCopierConnectionSchema = z.object({
+  masterAccountId: z.string(),
+  isActive: z.boolean(),
+});
+
+const referralLinkSchema = z.object({
+  broker: z.enum(["exness", "bybit", "binance"]),
+  referralUrl: z.string().url(),
+});
+
+// Apply validation middleware
+router.put("/user", validate(userSchema), router.put("/user"));
+router.post("/trading-accounts", validate(tradingAccountSchema), router.post("/trading-accounts"));
+router.post("/referral-earnings", validate(referralEarningSchema), router.post("/referral-earnings"));
+router.post("/master-copier-connections", validate(masterCopierConnectionSchema), router.post("/master-copier-connections"));
+router.post("/referral-links", validate(referralLinkSchema), router.post("/referral-links"));
