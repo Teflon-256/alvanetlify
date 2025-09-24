@@ -1,4 +1,5 @@
-import { Issuer, Strategy } from "openid-client";
+import { Client, Issuer } from "openid-client";
+import { Strategy } from "passport-openidconnect";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -15,10 +16,10 @@ const getOidcConfig = memoize(
     try {
       const issuer = await Issuer.discover(process.env.ISSUER_URL ?? "https://replit.com/oidc");
       return {
-        client: new issuer.Client({
+        client: new Client({
           client_id: process.env.REPL_ID ?? "",
           client_secret: process.env.REPL_SECRET ?? "",
-        }),
+        }, issuer),
       };
     } catch (error) {
       console.error("Error discovering OIDC config:", error);
@@ -109,7 +110,7 @@ export async function setupAuth(app: Express) {
       client: config.client,
       params: {
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        redirect_uri: `https://${domain}/api/callback`,
       },
     },
     verify
