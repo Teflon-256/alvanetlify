@@ -42,8 +42,8 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id));
-      return result[0] as User | undefined;
+      const result = await db.select().from(users).where(eq(users.id, id)).execute();
+      return result.length > 0 ? (result[0] as User) : undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
@@ -120,7 +120,7 @@ export class DatabaseStorage implements IStorage {
           isConnected: account.isConnected ?? null,
           apiKeyEncrypted: account.apiKeyEncrypted ?? null,
           lastSyncAt: account.lastSyncAt ?? null,
-          createdAt: account.createdAt,
+          createdAt: any.createdAt,
           updatedAt: account.updatedAt,
         })
         .returning();
@@ -325,14 +325,14 @@ export class DatabaseStorage implements IStorage {
 
   async updateReferralLinkStats(linkId: string, clicks?: number, conversions?: number): Promise<void> {
     try {
-      const updateData: any = { updatedAt: new Date() };
+      const updateData: { updatedAt: Date; clickCount?: number; conversionCount?: number } = { updatedAt: new Date() };
       
       if (clicks !== undefined) {
-        updateData.clickCount = sql`COALESCE(${referralLinks.clickCount}, 0) + ${clicks}`;
+        updateData.clickCount = clicks;
       }
       
       if (conversions !== undefined) {
-        updateData.conversionCount = sql`COALESCE(${referralLinks.conversionCount}, 0) + ${conversions}`;
+        updateData.conversionCount = conversions;
       }
 
       await db
