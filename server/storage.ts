@@ -42,8 +42,8 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id)).execute();
-      return result.length > 0 ? (result[0] as User) : undefined;
+      const result = await db.select().from(users).where(eq(users.id, id));
+      return Array.isArray(result) && result.length > 0 ? (result[0] as User) : undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
@@ -120,7 +120,7 @@ export class DatabaseStorage implements IStorage {
           isConnected: account.isConnected ?? null,
           apiKeyEncrypted: account.apiKeyEncrypted ?? null,
           lastSyncAt: account.lastSyncAt ?? null,
-          createdAt: any.createdAt,
+          createdAt: account.createdAt,
           updatedAt: account.updatedAt,
         })
         .returning();
