@@ -5,7 +5,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import MemoryStore from "memorystore";
 import { storage } from "./storage.js";
-import { Issuer } from "openid-client"; // Correct import for openid-client@5.7.0
+import { Issuer, TokenSet } from "openid-client"; // Correct import for openid-client@5.7.0
 
 if (!process.env.REPLIT_DOMAINS) {
   console.warn("Environment variable REPLIT_DOMAINS not provided, using default domain");
@@ -55,12 +55,12 @@ export function getSession() {
 
 function updateUserSession(
   user: any,
-  tokens: { claims: () => any; access_token: string; refresh_token?: string; expires_at?: number }
+  tokens: TokenSet // Use TokenSet type from openid-client
 ) {
   user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = tokens.expires_at;
+  user.access_token = tokens.access_token ?? null; // Handle undefined
+  user.refresh_token = tokens.refresh_token ?? null; // Handle undefined
+  user.expires_at = tokens.expires_at ?? null; // Handle undefined
 }
 
 async function upsertUser(claims: any) {
@@ -93,10 +93,13 @@ export async function setupAuth(app: Express) {
   }
 
   const verify = async (
-    tokens: any,
+    tokens: TokenSet, // Use TokenSet type
     verified: passport.AuthenticateCallback
   ) => {
     try {
+      if (!tokens.access_token) {
+        throw new Error("No access token provided");
+      }
       const user = {};
       updateUserSession(user, tokens);
       await upsertUser(tokens.claims());
