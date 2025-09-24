@@ -75,13 +75,13 @@ export class DatabaseStorage implements IStorage {
             updatedAt: new Date(),
           },
         })
-        .returning() as Promise<User[]>; // Explicitly type as User[]
+        .returning();
 
       if (user) {
         await this.createDefaultReferralLinks(user.id);
       }
 
-      return user;
+      return user as User;
     } catch (error) {
       console.error("Error upserting user:", error);
       throw new Error("Failed to upsert user");
@@ -182,7 +182,7 @@ export class DatabaseStorage implements IStorage {
         .insert(referralEarnings)
         .values({
           id: earning.id,
-          referrerId: eating.referrerId,
+          referrerId: earning.referrerId,
           referredUserId: earning.referredUserId,
           amount: earning.amount,
           feePercentage: earning.feePercentage ?? null,
@@ -358,7 +358,7 @@ export class DatabaseStorage implements IStorage {
     
     const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
       {
-        id: sql`gen_random_uuid()`.toString(), // Use database's UUID generator
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'exness',
         referralUrl: `https://one.exness.link/a/${this.generateReferralCode().toLowerCase()}`,
@@ -369,7 +369,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
-        id: sql`gen_random_uuid()`.toString(),
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'bybit',
         referralUrl: 'https://partner.bybit.com/b/119776',
@@ -380,7 +380,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
-        id: sql`gen_random_uuid()`.toString(),
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'binance',
         referralUrl: `https://accounts.binance.com/register?ref=${this.generateReferralCode()}`,
