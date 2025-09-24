@@ -181,12 +181,12 @@ export const insertReferralLinkSchema = createInsertSchema(referralLinks).omit({
 
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
-export type User = z.infer<typeof insertUserSchema> & { id: string; createdAt: Date; updatedAt: Date };
+export type User = typeof users.$inferSelect;
 export type InsertTradingAccount = z.infer<typeof insertTradingAccountSchema>;
-export type TradingAccount = z.infer<typeof insertTradingAccountSchema> & { id: string; createdAt: Date; updatedAt: Date };
+export type TradingAccount = typeof tradingAccounts.$inferSelect;
 export type InsertReferralEarning = z.infer<typeof insertReferralEarningSchema>;
-export type ReferralEarning = z.infer<typeof insertReferralEarningSchema> & { id: string; createdAt: Date; paidAt: Date | null };
+export type ReferralEarning = typeof referralEarnings.$inferSelect;
 export type InsertMasterCopierConnection = z.infer<typeof insertMasterCopierConnectionSchema>;
-export type MasterCopierConnection = z.infer<typeof insertMasterCopierConnectionSchema> & { id: string; createdAt: Date; updatedAt: Date };
+export type MasterCopierConnection = typeof masterCopierConnections.$inferSelect;
 export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema>;
-export type ReferralLink = z.infer<typeof insertReferralLinkSchema> & { id: string; createdAt: Date; updatedAt: Date };
+export type ReferralLink = typeof referralLinks.$inferSelect;
