@@ -59,7 +59,12 @@ export class DatabaseStorage implements IStorage {
     try {
       const [user] = await db
         .insert(users)
-        .values(userData)
+        .values({
+          ...userData,
+          id: userData.id || nanoid(), // Use nanoid if id not provided
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
         .onConflictDoUpdate({
           target: users.id,
           set: {
@@ -187,7 +192,7 @@ export class DatabaseStorage implements IStorage {
           transactionType: earning.transactionType,
           status: earning.status ?? null,
           createdAt: earning.createdAt,
-          paidAt: null, // Explicitly set to null as per schema
+          paidAt: null,
         })
         .returning();
       return newEarning as ReferralEarning;
@@ -201,7 +206,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), 0)::text`
+          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), '0.00')::text`
         })
         .from(referralEarnings)
         .where(and(
