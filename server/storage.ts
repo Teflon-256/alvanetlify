@@ -43,10 +43,14 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
       const result = await db.select().from(users).where(eq(users.id, id));
-      // Handle Neon's potential stringified JSON response
       let parsedResult = result;
       if (typeof result === 'string') {
-        parsedResult = JSON.parse(result);
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (parseError) {
+          console.error("Error parsing Neon response:", parseError);
+          return undefined;
+        }
       }
       return Array.isArray(parsedResult) && parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
     } catch (error) {
@@ -333,11 +337,11 @@ export class DatabaseStorage implements IStorage {
       const updateData: { updatedAt: Date; clickCount?: number; conversionCount?: number } = { updatedAt: new Date() };
       
       if (clicks !== undefined) {
-        updateData.clickCount = sql<number>`COALESCE(${referralLinks.clickCount}, 0) + ${clicks}`;
+        updateData.clickCount = clicks;
       }
       
       if (conversions !== undefined) {
-        updateData.conversionCount = sql<number>`COALESCE(${referralLinks.conversionCount}, 0) + ${conversions}`;
+        updateData.conversionCount = conversions;
       }
 
       await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId));
