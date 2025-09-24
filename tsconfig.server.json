@@ -15,7 +15,7 @@
     "paths": {
       "@shared/*": ["./shared/*"]
     },
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types", "./shared"]
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist"]
