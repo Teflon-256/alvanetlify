@@ -164,7 +164,6 @@ router.post("/referral-earnings", isAuthenticated, async (req: Request, res: Res
       id: nanoid(),
       referrerId: userId,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     const earning = await storage.createReferralEarning(earningData);
     res.status(201).json(earning);
