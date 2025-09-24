@@ -100,7 +100,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createTradingAccount(account: InsertTradingAccount & { id: string; createdAt: Date; updatedAt: Date }): Promise<TradingAccount> {
+  async createTradingAccount(account: InsertTradingAccount): Promise<TradingAccount> {
     try {
       const [newAccount] = await db
         .insert(tradingAccounts)
@@ -173,7 +173,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createReferralEarning(earning: InsertReferralEarning & { id: string; createdAt: Date }): Promise<ReferralEarning> {
+  async createReferralEarning(earning: InsertReferralEarning): Promise<ReferralEarning> {
     try {
       const [newEarning] = await db
         .insert(referralEarnings)
@@ -201,7 +201,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), 0)::text`
+          total: sql`COALESCE(SUM(${referralEarnings.amount}), 0)::text`
         })
         .from(referralEarnings)
         .where(and(
@@ -221,7 +221,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          count: sql<number>`COUNT(DISTINCT ${referralEarnings.referredUserId})`
+          count: sql`COUNT(DISTINCT ${referralEarnings.referredUserId})`
         })
         .from(referralEarnings)
         .where(eq(referralEarnings.referrerId, userId))
@@ -249,7 +249,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createMasterCopierConnection(connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date }): Promise<MasterCopierConnection> {
+  async createMasterCopierConnection(connection: InsertMasterCopierConnection): Promise<MasterCopierConnection> {
     try {
       const [newConnection] = await db
         .insert(masterCopierConnections)
@@ -301,7 +301,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createReferralLink(link: InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date }): Promise<ReferralLink> {
+  async createReferralLink(link: InsertReferralLink): Promise<ReferralLink> {
     try {
       const [newLink] = await db
         .insert(referralLinks)
@@ -353,7 +353,7 @@ export class DatabaseStorage implements IStorage {
   private async createDefaultReferralLinks(userId: string): Promise<void> {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
     
-    const defaultLinks = [
+    const defaultLinks: InsertReferralLink[] = [
       {
         id: nanoid(),
         userId,
@@ -424,7 +424,7 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.tradingAccounts.values()).filter(acc => acc.userId === userId);
   }
 
-  async createTradingAccount(account: InsertTradingAccount & { id: string; createdAt: Date; updatedAt: Date }): Promise<TradingAccount> {
+  async createTradingAccount(account: InsertTradingAccount): Promise<TradingAccount> {
     const newAccount: TradingAccount = { 
       ...account, 
       id: account.id, 
@@ -463,7 +463,7 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.referralEarnings.values()).filter(earning => earning.referrerId === userId);
   }
 
-  async createReferralEarning(earning: InsertReferralEarning & { id: string; createdAt: Date }): Promise<ReferralEarning> {
+  async createReferralEarning(earning: InsertReferralEarning): Promise<ReferralEarning> {
     const newEarning: ReferralEarning = { 
       ...earning, 
       id: earning.id, 
@@ -497,7 +497,7 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.masterCopierConnections.values()).filter(conn => conn.userId === userId);
   }
 
-  async createMasterCopierConnection(connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date }): Promise<MasterCopierConnection> {
+  async createMasterCopierConnection(connection: InsertMasterCopierConnection): Promise<MasterCopierConnection> {
     const newConnection: MasterCopierConnection = { 
       ...connection, 
       id: connection.id, 
@@ -522,7 +522,7 @@ export class MemoryStorage implements IStorage {
     return Array.from(this.referralLinks.values()).filter(link => link.userId === userId);
   }
 
-  async createReferralLink(link: InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date }): Promise<ReferralLink> {
+  async createReferralLink(link: InsertReferralLink): Promise<ReferralLink> {
     const newLink: ReferralLink = { 
       ...link, 
       id: link.id, 
@@ -547,7 +547,7 @@ export class MemoryStorage implements IStorage {
 
   private async createDefaultReferralLinks(userId: string): Promise<void> {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
-    const defaultLinks = [
+    const defaultLinks: InsertReferralLink[] = [
       { 
         id: nanoid(),
         userId, 
