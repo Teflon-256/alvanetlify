@@ -1,11 +1,11 @@
-import { Client, Issuer } from "openid-client"; // Update import to ensure compatibility
+import { Strategy } from "passport-openidconnect";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import MemoryStore from "memorystore";
 import { storage } from "./storage.js";
-import { Strategy } from "passport-openidconnect";
+import { Issuer } from "openid-client"; // Correct import for openid-client@5.7.0
 
 if (!process.env.REPLIT_DOMAINS) {
   console.warn("Environment variable REPLIT_DOMAINS not provided, using default domain");
