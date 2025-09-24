@@ -41,7 +41,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id));
+      const result = await db.select().from(users).where(eq(users.id, id)).execute();
       return result[0] || undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -91,7 +91,8 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(tradingAccounts)
         .where(eq(tradingAccounts.userId, userId))
-        .orderBy(desc(tradingAccounts.createdAt));
+        .orderBy(desc(tradingAccounts.createdAt))
+        .execute();
     } catch (error) {
       console.error("Error fetching trading accounts:", error);
       return [];
@@ -135,7 +136,8 @@ export class DatabaseStorage implements IStorage {
           lastSyncAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(tradingAccounts.id, accountId));
+        .where(eq(tradingAccounts.id, accountId))
+        .execute();
     } catch (error) {
       console.error("Error updating trading account balance:", error);
       throw new Error("Failed to update trading account balance");
@@ -149,7 +151,8 @@ export class DatabaseStorage implements IStorage {
         .where(and(
           eq(tradingAccounts.id, accountId),
           eq(tradingAccounts.userId, userId)
-        ));
+        ))
+        .execute();
     } catch (error) {
       console.error("Error deleting trading account:", error);
       throw new Error("Failed to delete trading account");
@@ -162,7 +165,8 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(referralEarnings)
         .where(eq(referralEarnings.referrerId, userId))
-        .orderBy(desc(referralEarnings.createdAt));
+        .orderBy(desc(referralEarnings.createdAt))
+        .execute();
     } catch (error) {
       console.error("Error fetching referral earnings:", error);
       return [];
@@ -203,7 +207,8 @@ export class DatabaseStorage implements IStorage {
         .where(and(
           eq(referralEarnings.referrerId, userId),
           eq(referralEarnings.status, 'paid')
-        ));
+        ))
+        .execute();
       return result[0] || { total: '0.00' };
     } catch (error) {
       console.error("Error fetching total referral earnings:", error);
@@ -218,7 +223,8 @@ export class DatabaseStorage implements IStorage {
           count: sql<number>`COUNT(DISTINCT ${referralEarnings.referredUserId})`
         })
         .from(referralEarnings)
-        .where(eq(referralEarnings.referrerId, userId));
+        .where(eq(referralEarnings.referrerId, userId))
+        .execute();
       return result[0] || { count: 0 };
     } catch (error) {
       console.error("Error fetching referral count:", error);
@@ -232,7 +238,8 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(masterCopierConnections)
         .where(eq(masterCopierConnections.userId, userId))
-        .orderBy(desc(masterCopierConnections.createdAt));
+        .orderBy(desc(masterCopierConnections.createdAt))
+        .execute();
     } catch (error) {
       console.error("Error fetching master copier connections:", error);
       return [];
@@ -269,7 +276,8 @@ export class DatabaseStorage implements IStorage {
           isActive, 
           updatedAt: new Date(),
         })
-        .where(eq(masterCopierConnections.id, connectionId));
+        .where(eq(masterCopierConnections.id, connectionId))
+        .execute();
     } catch (error) {
       console.error("Error updating master copier status:", error);
       throw new Error("Failed to update master copier status");
@@ -282,7 +290,8 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(referralLinks)
         .where(eq(referralLinks.userId, userId))
-        .orderBy(referralLinks.broker);
+        .orderBy(referralLinks.broker)
+        .execute();
     } catch (error) {
       console.error("Error fetching referral links:", error);
       return [];
@@ -317,7 +326,7 @@ export class DatabaseStorage implements IStorage {
       const updateData: { updatedAt: Date; clickCount?: number; conversionCount?: number } = { updatedAt: new Date() };
       if (clicks !== undefined) updateData.clickCount = clicks;
       if (conversions !== undefined) updateData.conversionCount = conversions;
-      await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId));
+      await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId)).execute();
     } catch (error) {
       console.error("Error updating referral link stats:", error);
       throw new Error("Failed to update referral link stats");
