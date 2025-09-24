@@ -551,5 +551,27 @@ export class MemoryStorage implements IStorage {
         clickCount: 0, 
         conversionCount: 0, 
         isActive: true, 
-        simplified code to avoid TypeScript errors caused by the database's UUID generator.
+        createdAt: new Date(), 
+        updatedAt: new Date(),
+      },
+      { 
+        id: randomBytes(16).toString('hex'),
+        userId, 
+        broker: 'binance', 
+        referralUrl: `https://accounts.binance.com/register?ref=${randomBytes(4).toString('hex').toUpperCase()}`, 
+        clickCount: 0, 
+        conversionCount: 0, 
+        isActive: true, 
+        createdAt: new Date(), 
+        updatedAt: new Date(),
+      },
+    ];
 
+    for (const link of defaultLinks) {
+      await this.createReferralLink(link);
+    }
+  }
+}
+
+// Use database storage in production, memory storage as fallback
+export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemoryStorage();
