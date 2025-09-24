@@ -19,7 +19,6 @@ import { db } from "./db.js";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
-// Interface for storage operations
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
@@ -43,20 +42,7 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
       const result = await db.select().from(users).where(eq(users.id, id));
-      let parsedResult: unknown = result;
-      if (typeof result === 'string') {
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (parseError) {
-          console.error("Error parsing Neon response in getUser:", parseError);
-          return undefined;
-        }
-      }
-      if (!Array.isArray(parsedResult)) {
-        console.error("Unexpected response format in getUser:", parsedResult);
-        return undefined;
-      }
-      return parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
+      return result[0] || undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
@@ -67,7 +53,6 @@ export class DatabaseStorage implements IStorage {
     if (!userData.referralCode) {
       userData.referralCode = this.generateReferralCode();
     }
-
     try {
       const result = await db
         .insert(users)
@@ -89,13 +74,10 @@ export class DatabaseStorage implements IStorage {
           },
         })
         .returning();
-
-      const user = result[0] as User;
-
+      const user = result[0];
       if (user) {
         await this.createDefaultReferralLinks(user.id);
       }
-
       return user;
     } catch (error) {
       console.error("Error upserting user:", error);
@@ -105,12 +87,11 @@ export class DatabaseStorage implements IStorage {
 
   async getTradingAccounts(userId: string): Promise<TradingAccount[]> {
     try {
-      const result = await db
+      return await db
         .select()
         .from(tradingAccounts)
         .where(eq(tradingAccounts.userId, userId))
         .orderBy(desc(tradingAccounts.createdAt));
-      return result as TradingAccount[];
     } catch (error) {
       console.error("Error fetching trading accounts:", error);
       return [];
@@ -137,7 +118,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: account.updatedAt,
         })
         .returning();
-      return newAccount as TradingAccount;
+      return newAccount;
     } catch (error) {
       console.error("Error creating trading account:", error);
       throw new Error("Failed to create trading account");
@@ -177,12 +158,11 @@ export class DatabaseStorage implements IStorage {
 
   async getReferralEarnings(userId: string): Promise<ReferralEarning[]> {
     try {
-      const result = await db
+      return await db
         .select()
         .from(referralEarnings)
         .where(eq(referralEarnings.referrerId, userId))
         .orderBy(desc(referralEarnings.createdAt));
-      return result as ReferralEarning[];
     } catch (error) {
       console.error("Error fetching referral earnings:", error);
       return [];
@@ -206,7 +186,7 @@ export class DatabaseStorage implements IStorage {
           paidAt: null,
         })
         .returning();
-      return newEarning as ReferralEarning;
+      return newEarning;
     } catch (error) {
       console.error("Error creating referral earning:", error);
       throw new Error("Failed to create referral earning");
@@ -224,7 +204,6 @@ export class DatabaseStorage implements IStorage {
           eq(referralEarnings.referrerId, userId),
           eq(referralEarnings.status, 'paid')
         ));
-      
       return result[0] || { total: '0.00' };
     } catch (error) {
       console.error("Error fetching total referral earnings:", error);
@@ -240,7 +219,6 @@ export class DatabaseStorage implements IStorage {
         })
         .from(referralEarnings)
         .where(eq(referralEarnings.referrerId, userId));
-      
       return result[0] || { count: 0 };
     } catch (error) {
       console.error("Error fetching referral count:", error);
@@ -250,12 +228,11 @@ export class DatabaseStorage implements IStorage {
 
   async getMasterCopierConnections(userId: string): Promise<MasterCopierConnection[]> {
     try {
-      const result = await db
+      return await db
         .select()
         .from(masterCopierConnections)
         .where(eq(masterCopierConnections.userId, userId))
         .orderBy(desc(masterCopierConnections.createdAt));
-      return result as MasterCopierConnection[];
     } catch (error) {
       console.error("Error fetching master copier connections:", error);
       return [];
@@ -277,7 +254,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: connection.updatedAt,
         })
         .returning();
-      return newConnection as MasterCopierConnection;
+      return newConnection;
     } catch (error) {
       console.error("Error creating master copier connection:", error);
       throw new Error("Failed to create master copier connection");
@@ -301,12 +278,11 @@ export class DatabaseStorage implements IStorage {
 
   async getReferralLinks(userId: string): Promise<ReferralLink[]> {
     try {
-      const result = await db
+      return await db
         .select()
         .from(referralLinks)
         .where(eq(referralLinks.userId, userId))
         .orderBy(referralLinks.broker);
-      return result as ReferralLink[];
     } catch (error) {
       console.error("Error fetching referral links:", error);
       return [];
@@ -329,7 +305,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: link.updatedAt,
         })
         .returning();
-      return newLink as ReferralLink;
+      return newLink;
     } catch (error) {
       console.error("Error creating referral link:", error);
       throw new Error("Failed to create referral link");
@@ -339,15 +315,8 @@ export class DatabaseStorage implements IStorage {
   async updateReferralLinkStats(linkId: string, clicks?: number, conversions?: number): Promise<void> {
     try {
       const updateData: { updatedAt: Date; clickCount?: number; conversionCount?: number } = { updatedAt: new Date() };
-      
-      if (clicks !== undefined) {
-        updateData.clickCount = clicks;
-      }
-      
-      if (conversions !== undefined) {
-        updateData.conversionCount = conversions;
-      }
-
+      if (clicks !== undefined) updateData.clickCount = clicks;
+      if (conversions !== undefined) updateData.conversionCount = conversions;
       await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId));
     } catch (error) {
       console.error("Error updating referral link stats:", error);
@@ -361,7 +330,6 @@ export class DatabaseStorage implements IStorage {
 
   private async createDefaultReferralLinks(userId: string): Promise<void> {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
-    
     const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
       {
         id: randomBytes(16).toString('hex'),
@@ -397,7 +365,6 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
     ];
-
     for (const link of defaultLinks) {
       try {
         await this.createReferralLink(link);
@@ -579,12 +546,10 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
       },
     ];
-
     for (const link of defaultLinks) {
       await this.createReferralLink(link);
     }
   }
 }
 
-// Use database storage in production, memory storage as fallback
 export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemoryStorage();
