@@ -1,11 +1,11 @@
 import { Client, Issuer } from "openid-client";
-import { Strategy } from "passport-openidconnect";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import MemoryStore from "memorystore";
 import { storage } from "./storage.js";
+import { Strategy } from "passport-openidconnect";
 
 if (!process.env.REPLIT_DOMAINS) {
   console.warn("Environment variable REPLIT_DOMAINS not provided, using default domain");
@@ -19,6 +19,8 @@ const getOidcConfig = memoize(
         client: new Client({
           client_id: process.env.REPL_ID ?? "",
           client_secret: process.env.REPL_SECRET ?? "",
+          redirect_uris: [`https://${process.env.REPLIT_DOMAINS?.split(",")[0] || "alvacapital.online"}/api/callback`],
+          response_types: ["code"],
         }, issuer),
       };
     } catch (error) {
