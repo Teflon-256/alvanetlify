@@ -1,4 +1,4 @@
-import { Client, Issuer } from "openid-client";
+import { Client, Issuer } from "openid-client"; // Update import to ensure compatibility
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -16,12 +16,12 @@ const getOidcConfig = memoize(
     try {
       const issuer = await Issuer.discover(process.env.ISSUER_URL ?? "https://replit.com/oidc");
       return {
-        client: new Client({
+        client: new issuer.Client({
           client_id: process.env.REPL_ID ?? "",
           client_secret: process.env.REPL_SECRET ?? "",
           redirect_uris: [`https://${process.env.REPLIT_DOMAINS?.split(",")[0] || "alvacapital.online"}/api/callback`],
           response_types: ["code"],
-        }, issuer),
+        }),
       };
     } catch (error) {
       console.error("Error discovering OIDC config:", error);
