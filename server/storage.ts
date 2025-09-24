@@ -42,17 +42,21 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id));
-      let parsedResult = result;
+      const result = await db.select().from(users).where(eq(users.id, id)).execute();
+      let parsedResult: any = result;
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
         } catch (parseError) {
-          console.error("Error parsing Neon response:", parseError);
+          console.error("Error parsing Neon response in getUser:", parseError);
           return undefined;
         }
       }
-      return Array.isArray(parsedResult) && parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
+      if (!Array.isArray(parsedResult)) {
+        console.error("Unexpected response format in getUser:", parsedResult);
+        return undefined;
+      }
+      return parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
@@ -344,7 +348,7 @@ export class DatabaseStorage implements IStorage {
         updateData.conversionCount = conversions;
       }
 
-      await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId));
+      await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId)).execute();
     } catch (error) {
       console.error("Error updating referral link stats:", error);
       throw new Error("Failed to update referral link stats");
