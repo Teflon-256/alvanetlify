@@ -10,7 +10,7 @@ import {
   integer,
   boolean,
 } from "drizzle-orm/pg-core";
-import { relations, type InferSelectModel } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -51,7 +51,7 @@ export const tradingAccounts = pgTable("trading_accounts", {
   dailyPnL: decimal("daily_pnl", { precision: 15, scale: 2 }).default('0.00'),
   copyStatus: varchar("copy_status").default('inactive'), // 'active', 'inactive', 'paused'
   isConnected: boolean("is_connected").default(true),
-  apiKeyEncrypted: text("api_key_encrypted"), // Encrypted API credentials
+  apiKeyEncrypted: text("api_key_encrypted"),
   lastSyncAt: timestamp("last_sync_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -180,13 +180,13 @@ export const insertReferralLinkSchema = createInsertSchema(referralLinks).omit({
 });
 
 // Types
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+export type UpsertUser = z.infer<typeof insertUserSchema> & { id: string };
+export type User = z.infer<typeof createInsertSchema(users)> & { createdAt: Date; updatedAt: Date };
 export type InsertTradingAccount = z.infer<typeof insertTradingAccountSchema>;
-export type TradingAccount = typeof tradingAccounts.$inferSelect;
+export type TradingAccount = z.infer<typeof createInsertSchema(tradingAccounts)> & { id: string; createdAt: Date; updatedAt: Date };
 export type InsertReferralEarning = z.infer<typeof insertReferralEarningSchema>;
-export type ReferralEarning = typeof referralEarnings.$inferSelect;
+export type ReferralEarning = z.infer<typeof createInsertSchema(referralEarnings)> & { id: string; createdAt: Date };
 export type InsertMasterCopierConnection = z.infer<typeof insertMasterCopierConnectionSchema>;
-export type MasterCopierConnection = typeof masterCopierConnections.$inferSelect;
+export type MasterCopierConnection = z.infer<typeof createInsertSchema(masterCopierConnections)> & { id: string; createdAt: Date; updatedAt: Date };
 export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema>;
-export type ReferralLink = typeof referralLinks.$inferSelect;
+export type ReferralLink = z.infer<typeof createInsertSchema(referralLinks)> & { id: string; createdAt: Date; updatedAt: Date };
