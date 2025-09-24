@@ -43,7 +43,12 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
       const result = await db.select().from(users).where(eq(users.id, id));
-      return Array.isArray(result) && result.length > 0 ? (result[0] as User) : undefined;
+      // Handle Neon's potential stringified JSON response
+      let parsedResult = result;
+      if (typeof result === 'string') {
+        parsedResult = JSON.parse(result);
+      }
+      return Array.isArray(parsedResult) && parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
@@ -328,17 +333,14 @@ export class DatabaseStorage implements IStorage {
       const updateData: { updatedAt: Date; clickCount?: number; conversionCount?: number } = { updatedAt: new Date() };
       
       if (clicks !== undefined) {
-        updateData.clickCount = clicks;
+        updateData.clickCount = sql<number>`COALESCE(${referralLinks.clickCount}, 0) + ${clicks}`;
       }
       
       if (conversions !== undefined) {
-        updateData.conversionCount = conversions;
+        updateData.conversionCount = sql<number>`COALESCE(${referralLinks.conversionCount}, 0) + ${conversions}`;
       }
 
-      await db
-        .update(referralLinks)
-        .set(updateData)
-        .where(eq(referralLinks.id, linkId));
+      await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId));
     } catch (error) {
       console.error("Error updating referral link stats:", error);
       throw new Error("Failed to update referral link stats");
