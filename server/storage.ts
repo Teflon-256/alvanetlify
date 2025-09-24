@@ -18,7 +18,6 @@ import {
 import { db } from "./db.js";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { nanoid } from "nanoid";
 
 // Interface for storage operations
 export interface IStorage {
@@ -61,7 +60,6 @@ export class DatabaseStorage implements IStorage {
         .insert(users)
         .values({
           ...userData,
-          id: userData.id || nanoid(), // Use nanoid if id not provided
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -360,7 +358,7 @@ export class DatabaseStorage implements IStorage {
     
     const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
       {
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'), // Use crypto for UUID-like string
         userId,
         broker: 'exness',
         referralUrl: `https://one.exness.link/a/${this.generateReferralCode().toLowerCase()}`,
@@ -371,7 +369,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'bybit',
         referralUrl: 'https://partner.bybit.com/b/119776',
@@ -382,7 +380,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'binance',
         referralUrl: `https://accounts.binance.com/register?ref=${this.generateReferralCode()}`,
@@ -542,7 +540,7 @@ export class MemoryStorage implements IStorage {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
     const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
       { 
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'),
         userId, 
         broker: 'exness', 
         referralUrl: `https://one.exness.link/a/${randomBytes(4).toString('hex').toLowerCase()}`, 
@@ -553,7 +551,7 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
       },
       { 
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'),
         userId, 
         broker: 'bybit', 
         referralUrl: 'https://partner.bybit.com/b/119776', 
@@ -564,7 +562,7 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
       },
       { 
-        id: nanoid(),
+        id: randomBytes(16).toString('hex'),
         userId, 
         broker: 'binance', 
         referralUrl: `https://accounts.binance.com/register?ref=${randomBytes(4).toString('hex').toUpperCase()}`, 
