@@ -65,11 +65,11 @@ export class DatabaseStorage implements IStorage {
           target: users.id,
           set: {
             email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            profileImageUrl: userData.profileImageUrl,
+            firstName: userData.firstName ?? null,
+            lastName: userData.lastName ?? null,
+            profileImageUrl: userData.profileImageUrl ?? null,
             referralCode: userData.referralCode,
-            referredBy: userData.referredBy,
+            referredBy: userData.referredBy ?? null,
             updatedAt: new Date(),
           },
         })
@@ -130,9 +130,9 @@ export class DatabaseStorage implements IStorage {
     try {
       await db
         .update(tradingAccounts)
-        .set({ 
-          balance, 
-          dailyPnL, 
+        .set({
+          balance,
+          dailyPnL,
           lastSyncAt: new Date(),
           updatedAt: new Date(),
         })
@@ -272,8 +272,8 @@ export class DatabaseStorage implements IStorage {
     try {
       await db
         .update(masterCopierConnections)
-        .set({ 
-          isActive, 
+        .set({
+          isActive,
           updatedAt: new Date(),
         })
         .where(eq(masterCopierConnections.id, connectionId))
@@ -399,7 +399,16 @@ export class MemoryStorage implements IStorage {
     if (!userData.referralCode) {
       userData.referralCode = randomBytes(4).toString('hex').toUpperCase();
     }
-    const user: User = { ...userData, id: userData.id, createdAt: new Date(), updatedAt: new Date() };
+    const user: User = {
+      ...userData,
+      id: userData.id,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      referredBy: userData.referredBy ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     this.users.set(user.id, user);
     await this.createDefaultReferralLinks(user.id);
     return user;
@@ -410,8 +419,8 @@ export class MemoryStorage implements IStorage {
   }
 
   async createTradingAccount(account: InsertTradingAccount & { id: string; createdAt: Date; updatedAt: Date }): Promise<TradingAccount> {
-    const newAccount: TradingAccount = { 
-      ...account, 
+    const newAccount: TradingAccount = {
+      ...account,
       accountName: account.accountName ?? null,
       balance: account.balance ?? null,
       dailyPnL: account.dailyPnL ?? null,
@@ -446,8 +455,8 @@ export class MemoryStorage implements IStorage {
   }
 
   async createReferralEarning(earning: InsertReferralEarning & { id: string; createdAt: Date }): Promise<ReferralEarning> {
-    const newEarning: ReferralEarning = { 
-      ...earning, 
+    const newEarning: ReferralEarning = {
+      ...earning,
       feePercentage: earning.feePercentage ?? null,
       status: earning.status ?? null,
       paidAt: null,
@@ -477,8 +486,8 @@ export class MemoryStorage implements IStorage {
   }
 
   async createMasterCopierConnection(connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date }): Promise<MasterCopierConnection> {
-    const newConnection: MasterCopierConnection = { 
-      ...connection, 
+    const newConnection: MasterCopierConnection = {
+      ...connection,
       copyRatio: connection.copyRatio ?? null,
       isActive: connection.isActive ?? null,
     };
@@ -499,9 +508,9 @@ export class MemoryStorage implements IStorage {
   }
 
   async createReferralLink(link: InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date }): Promise<ReferralLink> {
-    const newLink: ReferralLink = { 
-      ...link, 
-      clickCount: link.clickCount ?? 0, 
+    const newLink: ReferralLink = {
+      ...link,
+      clickCount: link.clickCount ?? 0,
       conversionCount: link.conversionCount ?? 0,
       isActive: link.isActive ?? null,
     };
@@ -521,37 +530,37 @@ export class MemoryStorage implements IStorage {
   private async createDefaultReferralLinks(userId: string): Promise<void> {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
     const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
-      { 
+      {
         id: randomBytes(16).toString('hex'),
-        userId, 
-        broker: 'exness', 
-        referralUrl: `https://one.exness.link/a/${randomBytes(4).toString('hex').toLowerCase()}`, 
-        clickCount: 0, 
-        conversionCount: 0, 
-        isActive: true, 
-        createdAt: new Date(), 
+        userId,
+        broker: 'exness',
+        referralUrl: `https://one.exness.link/a/${randomBytes(4).toString('hex').toLowerCase()}`,
+        clickCount: 0,
+        conversionCount: 0,
+        isActive: true,
+        createdAt: new Date(),
         updatedAt: new Date(),
       },
-      { 
+      {
         id: randomBytes(16).toString('hex'),
-        userId, 
-        broker: 'bybit', 
-        referralUrl: 'https://partner.bybit.com/b/119776', 
-        clickCount: 0, 
-        conversionCount: 0, 
-        isActive: true, 
-        createdAt: new Date(), 
+        userId,
+        broker: 'bybit',
+        referralUrl: 'https://partner.bybit.com/b/119776',
+        clickCount: 0,
+        conversionCount: 0,
+        isActive: true,
+        createdAt: new Date(),
         updatedAt: new Date(),
       },
-      { 
+      {
         id: randomBytes(16).toString('hex'),
-        userId, 
-        broker: 'binance', 
-        referralUrl: `https://accounts.binance.com/register?ref=${randomBytes(4).toString('hex').toUpperCase()}`, 
-        clickCount: 0, 
-        conversionCount: 0, 
-        isActive: true, 
-        createdAt: new Date(), 
+        userId,
+        broker: 'binance',
+        referralUrl: `https://accounts.binance.com/register?ref=${randomBytes(4).toString('hex').toUpperCase()}`,
+        clickCount: 0,
+        conversionCount: 0,
+        isActive: true,
+        createdAt: new Date(),
         updatedAt: new Date(),
       },
     ];
