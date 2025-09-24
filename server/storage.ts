@@ -328,11 +328,11 @@ export class DatabaseStorage implements IStorage {
       const updateData: any = { updatedAt: new Date() };
       
       if (clicks !== undefined) {
-        updateData.clickCount = sql`${referralLinks.clickCount} + ${clicks}`;
+        updateData.clickCount = sql`COALESCE(${referralLinks.clickCount}, 0) + ${clicks}`;
       }
       
       if (conversions !== undefined) {
-        updateData.conversionCount = sql`${referralLinks.conversionCount} + ${conversions}`;
+        updateData.conversionCount = sql`COALESCE(${referralLinks.conversionCount}, 0) + ${conversions}`;
       }
 
       await db
@@ -352,8 +352,9 @@ export class DatabaseStorage implements IStorage {
   private async createDefaultReferralLinks(userId: string): Promise<void> {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'alvacapital.online';
     
-    const defaultLinks: (InsertReferralLink & { createdAt: Date; updatedAt: Date })[] = [
+    const defaultLinks: (InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date })[] = [
       {
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'exness',
         referralUrl: `https://one.exness.link/a/${this.generateReferralCode().toLowerCase()}`,
@@ -364,6 +365,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'bybit',
         referralUrl: 'https://partner.bybit.com/b/119776',
@@ -374,6 +376,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       },
       {
+        id: randomBytes(16).toString('hex'),
         userId,
         broker: 'binance',
         referralUrl: `https://accounts.binance.com/register?ref=${this.generateReferralCode()}`,
