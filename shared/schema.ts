@@ -28,7 +28,7 @@ export const sessions = pgTable(
 
 // User storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const users: any = pgTable("users", {
+export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
@@ -107,7 +107,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.referredBy],
     references: [users.id],
   }),
-}) as any);
+}));
 
 export const tradingAccountsRelations = relations(tradingAccounts, ({ one, many }) => ({
   user: one(users, {
@@ -181,12 +181,12 @@ export const insertReferralLinkSchema = createInsertSchema(referralLinks).omit({
 
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema> & { id: string };
-export type User = z.infer<typeof createInsertSchema(users)> & { createdAt: Date; updatedAt: Date };
-export type InsertTradingAccount = z.infer<typeof insertTradingAccountSchema>;
+export type User = z.infer<typeof createInsertSchema(users)> & { id: string; createdAt: Date; updatedAt: Date };
+export type InsertTradingAccount = z.infer<typeof insertTradingAccountSchema> & { id: string; createdAt: Date; updatedAt: Date };
 export type TradingAccount = z.infer<typeof createInsertSchema(tradingAccounts)> & { id: string; createdAt: Date; updatedAt: Date };
-export type InsertReferralEarning = z.infer<typeof insertReferralEarningSchema>;
-export type ReferralEarning = z.infer<typeof createInsertSchema(referralEarnings)> & { id: string; createdAt: Date };
-export type InsertMasterCopierConnection = z.infer<typeof insertMasterCopierConnectionSchema>;
+export type InsertReferralEarning = z.infer<typeof insertReferralEarningSchema> & { id: string; createdAt: Date };
+export type ReferralEarning = z.infer<typeof createInsertSchema(referralEarnings)> & { id: string; createdAt: Date; paidAt: Date | null };
+export type InsertMasterCopierConnection = z.infer<typeof insertMasterCopierConnectionSchema> & { id: string; createdAt: Date; updatedAt: Date };
 export type MasterCopierConnection = z.infer<typeof createInsertSchema(masterCopierConnections)> & { id: string; createdAt: Date; updatedAt: Date };
-export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema>;
+export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema> & { id: string; createdAt: Date; updatedAt: Date };
 export type ReferralLink = z.infer<typeof createInsertSchema(referralLinks)> & { id: string; createdAt: Date; updatedAt: Date };
