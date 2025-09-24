@@ -42,13 +42,21 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await db.select().from(users).where(eq(users.id, id)).execute();
-      let parsedResult: User[] = Array.isArray(result) ? result : typeof result === 'string' ? JSON.parse(result) : [];
+      const result = await db.select().from(users).where(eq(users.id, id));
+      let parsedResult: unknown = result;
+      if (typeof result === 'string') {
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (parseError) {
+          console.error("Error parsing Neon response in getUser:", parseError);
+          return undefined;
+        }
+      }
       if (!Array.isArray(parsedResult)) {
         console.error("Unexpected response format in getUser:", parsedResult);
         return undefined;
       }
-      return parsedResult.length > 0 ? parsedResult[0] : undefined;
+      return parsedResult.length > 0 ? (parsedResult[0] as User) : undefined;
     } catch (error) {
       console.error("Error fetching user:", error);
       return undefined;
