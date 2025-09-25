@@ -25,12 +25,7 @@ export const storage = {
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          profileImageUrl: data.profileImageUrl,
-          referralCode: data.referralCode,
-          referredBy: data.referredBy,
+          ...data,
           updatedAt: new Date(),
         },
       });
@@ -121,7 +116,7 @@ export const storage = {
   updateMasterCopierStatus: async (connectionId: string, isActive: boolean) => {
     await db
       .update(masterCopierConnections)
-      .set({ isActive })
+      .set({ isActive: isActive })
       .where(eq(masterCopierConnections.id, connectionId));
   },
 };
