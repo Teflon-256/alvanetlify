@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartLine, Link, Bot, Users, Shield, Headphones, TrendingUp, Zap, DollarSign } from "lucide-react";
-import futuristicWallStreet from "@assets/generated_images/Futuristic_Wall_Street_9156e3fe.png";
+
+// Remove problematic image import
+// If you have the image, ensure it's in client/src/assets/generated_images/ and uncomment with correct path
+// import futuristicWallStreet from "@assets/generated_images/Futuristic_Wall_Street_9156e3fe.png";
 
 export default function Landing() {
   const handleGetStarted = () => {
@@ -50,9 +53,10 @@ export default function Landing() {
       <section className="relative py-20 lg:py-32 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-          style={{
-            backgroundImage: `url(${futuristicWallStreet})`,
-          }}
+          // Remove backgroundImage if image is missing
+          // style={{
+          //   backgroundImage: `url(${futuristicWallStreet})`,
+          // }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background/80 to-background/60"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(0_0%_98%/0.1)_0%,transparent_50%)]"></div>
