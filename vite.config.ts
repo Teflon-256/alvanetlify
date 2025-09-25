@@ -11,5 +11,6 @@ export default defineConfig({
       external: ['axios'],
     },
     outDir: '../dist/public', // Output to dist/public relative to client/
+    emptyOutDir: true, // Clear dist/public before building
   },
 });
