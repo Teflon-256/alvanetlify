@@ -5,6 +5,7 @@ import {
   referralEarnings,
   masterCopierConnections,
   referralLinks,
+  InsertUser,
   InsertTradingAccount,
   InsertReferralLink,
   InsertMasterCopierConnection,
@@ -14,6 +15,26 @@ import { eq } from 'drizzle-orm';
 export const storage = {
   getUser: async (id: string) => {
     const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  },
+
+  upsertUser: async (data: InsertUser) => {
+    await db
+      .insert(users)
+      .values(data)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          profileImageUrl: data.profileImageUrl,
+          referralCode: data.referralCode,
+          referredBy: data.referredBy,
+          updatedAt: new Date(),
+        },
+      });
+    const result = await db.select().from(users).where(eq(users.id, data.id));
     return result[0];
   },
 
