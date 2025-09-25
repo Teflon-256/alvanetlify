@@ -152,3 +152,58 @@ router.post('/api/referral-links', isAuthenticated, async (req, res) => {
 router.get('/api/referral-stats', isAuthenticated, async (req, res) => {
   try {
     const [totalEarnings, referralCount] = await Promise.all([
+      storage.getTotalReferralEarnings(req.user!.id),
+      storage.getReferralCount(req.user!.id),
+    ]);
+    res.json({ totalEarnings, referralCount });
+  } catch (error) {
+    console.error('Error fetching referral stats:', error);
+    res.status(500).json({ error: 'Failed to fetch referral stats' });
+  }
+});
+
+router.get('/api/master-copier-connections', isAuthenticated, async (req, res) => {
+  try {
+    const connections = await storage.getMasterCopierConnections(req.user!.id);
+    res.json(connections);
+  } catch (error) {
+    console.error('Error fetching master copier connections:', error);
+    res.status(500).json({ error: 'Failed to fetch master copier connections' });
+  }
+});
+
+router.post('/api/master-copier-connections', isAuthenticated, async (req, res) => {
+  try {
+    const { tradingAccountId, masterAccountId, copyRatio, isActive } = req.body;
+
+    const connection: FullInsertMasterCopierConnection = {
+      id: randomBytes(16).toString('hex'),
+      userId: req.user!.id,
+      tradingAccountId,
+      masterAccountId,
+      copyRatio,
+      isActive,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await storage.createMasterCopierConnection(connection);
+    res.json(result);
+  } catch (error) {
+    console.error('Error creating master copier connection:', error);
+    res.status(500).json({ error: 'Failed to create master copier connection' });
+  }
+});
+
+router.patch('/api/master-copier-connections/:connectionId', isAuthenticated, async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    await storage.updateMasterCopierStatus(req.params.connectionId, isActive);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating master copier connection:', error);
+    res.status(500).json({ error: 'Failed to update master copier connection' });
+  }
+});
+
+export default router;
