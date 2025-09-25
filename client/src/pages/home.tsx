@@ -1,621 +1,315 @@
-import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { 
-  ChartLine, 
-  Wallet, 
-  TrendingUp, 
-  Users, 
-  DollarSign, 
-  Plus, 
-  Copy, 
-  Settings, 
-  Trash2,
-  ExternalLink,
-  RefreshCw,
-  Bot,
-  Award
-} from "lucide-react";
-import { SiBinance } from "react-icons/si";
-import futuristicExchange from "@assets/generated_images/Futuristic_stock_exchange_wallpaper_8045bc0a.png";
-
-// Form schemas
-const connectAccountSchema = z.object({
-  broker: z.enum(['exness', 'bybit', 'binance']),
-  accountId: z.string().min(1, "Account Number is required"),
-});
-
-type ConnectAccountForm = z.infer<typeof connectAccountSchema>;
-
-// Dashboard data type
-interface DashboardData {
-  totalBalance: string;
-  dailyPnL: string;
-  referralCount: number;
-  referralEarnings: string;
-  tradingAccounts: any[];
-  recentReferralEarnings: any[];
-  masterCopierConnections: any[];
-  referralLinks: any[];
-}
+import { Card, CardContent } from "@/components/ui/card";
+import { ChartLine, Link, Bot, Users, Shield, Headphones, TrendingUp, Zap, DollarSign } from "lucide-react";
+// Remove problematic image import
+// If the image exists, ensure it's in client/src/generated_images/ and uncomment with correct path
+// import futuristicStockExchange from "@/generated_images/Futuristic_stock_exchange_wallpaper_8045bc0a.png";
 
 export default function Home() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { toast } = useToast();
-  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, authLoading, toast]);
-
-  // Dashboard data query
-  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery<DashboardData>({
-    queryKey: ["/api/dashboard"],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  // Handle dashboard query errors
-  useEffect(() => {
-    if (dashboardError && isUnauthorizedError(dashboardError as Error)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [dashboardError, toast]);
-
-  // Connect account form
-  const connectForm = useForm<ConnectAccountForm>({
-    resolver: zodResolver(connectAccountSchema),
-    defaultValues: {
-      broker: 'exness',
-      accountId: '',
-    },
-  });
-
-  // Connect account mutation
-  const connectAccountMutation = useMutation({
-    mutationFn: async (data: ConnectAccountForm) => {
-      await apiRequest("POST", "/api/trading-accounts", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Trading account connected successfully!",
-      });
-      setConnectDialogOpen(false);
-      connectForm.reset();
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to connect trading account. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Disconnect account mutation
-  const disconnectAccountMutation = useMutation({
-    mutationFn: async (accountId: string) => {
-      await apiRequest("DELETE", `/api/trading-accounts/${accountId}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Trading account disconnected successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to disconnect account. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Copy referral link
-  const copyReferralLink = async (link: string) => {
-    try {
-      await navigator.clipboard.writeText(link);
-      toast({
-        title: "Copied!",
-        description: "Referral link copied to clipboard.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy link. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
-
-  if (authLoading || dashboardLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-
-  const brokerIcons = {
-    exness: { 
-      icon: () => (
-        <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-          <span className="text-xs font-bold text-orange-600">EX</span>
-        </div>
-      ), 
-      color: "bg-gradient-to-br from-orange-500 to-orange-600", 
-      textColor: "text-white" 
-    },
-    bybit: { 
-      icon: () => (
-        <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-          <span className="text-xs font-bold text-amber-500">BY</span>
-        </div>
-      ), 
-      color: "bg-gradient-to-br from-amber-500 to-yellow-500", 
-      textColor: "text-white" 
-    },
-    binance: { 
-      icon: () => <SiBinance className="w-6 h-6 text-yellow-500" />, 
-      color: "bg-gradient-to-br from-yellow-400 to-amber-400", 
-      textColor: "text-black" 
-    }
+  const handleGetStarted = () => {
+    window.location.href = '/.netlify/functions/index/api/login';
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      {/* Futuristic Background */}
-      <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-5 z-0"
-        style={{
-          backgroundImage: `url(${futuristicExchange})`,
-        }}
-      ></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 z-0"></div>
+    <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 relative">
+      <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
                 <ChartLine className="text-white h-4 w-4" />
               </div>
-              <span className="text-xl font-serif font-bold gradient-text" data-testid="nav-logo">AlvaCapital</span>
+              <span className="text-xl font-serif font-bold gradient-text" data-testid="logo-text">AlvaCapital</span>
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-muted-foreground hover:text-primary transition-colors" data-testid="nav-features">Features</a>
+              <a href="#about" className="text-muted-foreground hover:text-primary transition-colors" data-testid="nav-about">About</a>
+              <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors" data-testid="nav-contact">Contact</a>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                {user.profileImageUrl && (
-                  <img 
-                    src={user.profileImageUrl} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full object-cover"
-                    data-testid="user-avatar"
-                  />
-                )}
-                <span className="text-sm font-medium" data-testid="user-name">
-                  {user.firstName || user.email}
-                </span>
-              </div>
               <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                data-testid="logout-button"
+                variant="ghost" 
+                onClick={handleGetStarted} 
+                className="text-muted-foreground hover:text-primary"
+                data-testid="nav-signin"
               >
-                Logout
+                Sign In
+              </Button>
+              <Button 
+                onClick={handleGetStarted} 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                data-testid="nav-get-started"
+              >
+                Get Started
               </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <div className="mb-8">
-          <h1 className="text-3xl lg:text-4xl font-serif font-bold gradient-text mb-2" data-testid="dashboard-title">
-            Welcome Back, {user.firstName || 'Trader'}
-          </h1>
-          <p className="text-muted-foreground" data-testid="dashboard-subtitle">
-            Advanced trading management. Simplified.
-          </p>
-        </div>
-
-        {/* Dashboard Stats */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="premium-card" data-testid="stat-total-portfolio">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Wallet className="text-primary h-6 w-6" />
+      {/* Hero Section */}
+      <section className="relative py-20 lg:py-32 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          // Remove backgroundImage if image is missing
+          // style={{
+          //   backgroundImage: `url(${futuristicStockExchange})`,
+          // }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/80 to-background/60"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(0_0%_98%/0.1)_0%,transparent_50%)]"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6" data-testid="hero-title">
+                Alva Capital
+                <span className="gradient-text block">Account Management</span>
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 leading-relaxed" data-testid="hero-description">
+                Connect your trading accounts to our master copier system, track performance, and earn through our exclusive referral program. Experience premium capital management.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button 
+                  onClick={handleGetStarted} 
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold transition-all transform hover:scale-105"
+                  data-testid="hero-start-trading"
+                >
+                  Start Trading
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-border hover:border-primary text-foreground px-8 py-4 text-lg font-semibold"
+                  data-testid="hero-learn-more"
+                >
+                  Learn More
+                </Button>
+              </div>
+              <div className="mt-12 flex items-center justify-center lg:justify-start space-x-8">
+                <div className="text-center">
+                  <div className="text-2xl font-bold gradient-text" data-testid="stat-assets">$500M+</div>
+                  <div className="text-sm text-muted-foreground">Assets Managed</div>
                 </div>
-                <Badge variant="secondary" className="text-green-400">
-                  +12.5%
-                </Badge>
-              </div>
-              <div className="text-2xl font-bold mb-1" data-testid="total-balance">
-                ${dashboardData?.totalBalance || '0.00'}
-              </div>
-              <div className="text-sm text-muted-foreground">Portfolio Value</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="premium-card" data-testid="stat-daily-pnl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="text-green-400 h-6 w-6" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold gradient-text" data-testid="stat-traders">10K+</div>
+                  <div className="text-sm text-muted-foreground">Active Traders</div>
                 </div>
-                <Badge variant="secondary" className="text-green-400">
-                  +5.2%
-                </Badge>
-              </div>
-              <div className="text-2xl font-bold mb-1 text-green-400" data-testid="daily-pnl">
-                +${dashboardData?.dailyPnL || '0.00'}
-              </div>
-              <div className="text-sm text-muted-foreground">Today's P&L</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="premium-card" data-testid="stat-referrals">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Users className="text-blue-400 h-6 w-6" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold gradient-text" data-testid="stat-uptime">99.9%</div>
+                  <div className="text-sm text-muted-foreground">Uptime</div>
                 </div>
-                <Badge variant="secondary" className="text-blue-400">
-                  +3 this week
-                </Badge>
               </div>
-              <div className="text-2xl font-bold mb-1" data-testid="referral-count">
-                {dashboardData?.referralCount || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">Referrals</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="premium-card" data-testid="stat-earnings">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <DollarSign className="text-purple-400 h-6 w-6" />
-                </div>
-                <Badge variant="secondary" className="text-purple-400">
-                  +$234.50
-                </Badge>
-              </div>
-              <div className="text-2xl font-bold mb-1" data-testid="referral-earnings">
-                ${dashboardData?.referralEarnings || '0.00'}
-              </div>
-              <div className="text-sm text-muted-foreground">Earnings</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Connected Accounts */}
-          <div className="lg:col-span-2">
-            <Card className="premium-card" data-testid="connected-accounts-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-semibold">Trading Accounts</CardTitle>
-                  <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-primary hover:bg-primary/90" data-testid="connect-account-button">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Connect Account
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent data-testid="connect-account-dialog">
-                      <DialogHeader>
-                        <DialogTitle>Connect Trading Account</DialogTitle>
-                      </DialogHeader>
-                      <Form {...connectForm}>
-                        <form onSubmit={connectForm.handleSubmit((data) => connectAccountMutation.mutate(data))} className="space-y-4">
-                          <FormField
-                            control={connectForm.control}
-                            name="broker"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Broker</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger data-testid="broker-select">
-                                      <SelectValue placeholder="Select a broker" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="exness">Exness</SelectItem>
-                                    <SelectItem value="bybit">Bybit</SelectItem>
-                                    <SelectItem value="binance">Binance</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={connectForm.control}
-                            name="accountId"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Account Number</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter your account number" {...field} data-testid="account-number-input" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="flex justify-end space-x-2">
-                            <Button type="button" variant="outline" onClick={() => setConnectDialogOpen(false)} data-testid="cancel-connect">
-                              Cancel
-                            </Button>
-                            <Button type="submit" disabled={connectAccountMutation.isPending} data-testid="submit-connect">
-                              {connectAccountMutation.isPending ? (
-                                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                              ) : null}
-                              Connect Account
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {dashboardData?.tradingAccounts?.length === 0 ? (
-                    <div className="text-center py-8" data-testid="no-accounts-message">
-                      <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No trading accounts connected yet.</p>
-                      <p className="text-sm text-muted-foreground">Connect your first account to get started.</p>
+            </div>
+            <div className="relative">
+              <div className="floating-animation">
+                <Card className="premium-card backdrop-blur-sm" data-testid="hero-dashboard-preview">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold">Portfolio Overview</h3>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm text-muted-foreground">Live</span>
+                      </div>
                     </div>
-                  ) : (
-                    dashboardData?.tradingAccounts?.map((account: any) => (
-                      <div key={account.id} className="bg-muted/30 rounded-lg p-4 border border-primary/20" data-testid={`account-${account.broker}`}>
-                        <div className="flex items-center justify-between mb-3">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <div className="text-sm text-muted-foreground">Total Balance</div>
+                        <div className="text-2xl font-bold gradient-text" data-testid="preview-total-balance">$125,430.50</div>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <div className="text-sm text-muted-foreground">Today's P&L</div>
+                        <div className="text-2xl font-bold text-green-400" data-testid="preview-daily-pnl">+$2,345.67</div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        { name: "Exness", icon: "EX", balance: "$45,230.20", pnl: "+2.34%", color: "bg-orange-500" },
+                        { name: "Bybit", icon: "BY", balance: "$32,100.15", pnl: "+1.87%", color: "bg-yellow-500" },
+                        { name: "Binance", icon: "BN", balance: "$48,100.15", pnl: "+3.12%", color: "bg-yellow-400" }
+                      ].map((broker, index) => (
+                        <div key={broker.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg" data-testid={`preview-broker-${broker.name.toLowerCase().replace(/\s+/g, '-')}`}>
                           <div className="flex items-center space-x-3">
-                            <div className={`w-10 h-10 ${brokerIcons[account.broker as keyof typeof brokerIcons]?.color} rounded-lg flex items-center justify-center`}>
-                              {brokerIcons[account.broker as keyof typeof brokerIcons]?.icon()}
+                            <div className={`w-8 h-8 ${broker.color} rounded-full flex items-center justify-center`}>
+                              <span className={`text-xs font-bold ${broker.name === "Binance" ? "text-black" : "text-white"}`}>{broker.icon}</span>
                             </div>
                             <div>
-                              <div className="font-semibold">{account.accountName}</div>
-                              <div className="text-sm text-muted-foreground">ID: {account.accountId}</div>
+                              <div className="font-medium">{broker.name}</div>
+                              <div className="text-sm text-muted-foreground">Connected</div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-green-400">Connected</span>
+                          <div className="text-right">
+                            <div className="font-semibold">{broker.balance}</div>
+                            <div className="text-sm text-green-400">{broker.pnl}</div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">Balance</div>
-                            <div className="font-semibold" data-testid={`balance-${account.broker}`}>
-                              ${account.balance}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Today's P&L</div>
-                            <div className="font-semibold text-green-400" data-testid={`pnl-${account.broker}`}>
-                              +${account.dailyPnL}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Copy Status</div>
-                            <div className="font-semibold text-primary" data-testid={`copy-status-${account.broker}`}>
-                              {account.copyStatus}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid={`view-details-${account.broker}`}>
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-red-400 hover:text-red-300"
-                            onClick={() => disconnectAccountMutation.mutate(account.id)}
-                            disabled={disconnectAccountMutation.isPending}
-                            data-testid={`disconnect-${account.broker}`}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Disconnect
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Create Trading Account */}
-            <Card className="premium-card" data-testid="create-trading-account-card">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">Start Trading</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Begin your trading journey with these trusted platforms.
-                  </p>
-                  {dashboardData?.referralLinks?.map((link: any) => (
-                    <Button
-                      key={link.id}
-                      variant="outline"
-                      className="w-full justify-between h-auto p-4 bg-muted/30 hover:bg-muted/50 border-primary/20"
-                      onClick={() => window.open(link.referralUrl, '_blank')}
-                      data-testid={`create-account-${link.broker}`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 ${brokerIcons[link.broker as keyof typeof brokerIcons]?.color} rounded-lg flex items-center justify-center`}>
-                          {brokerIcons[link.broker as keyof typeof brokerIcons]?.icon()}
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium capitalize">{link.broker}</div>
-                          <div className="text-xs text-muted-foreground">Start trading</div>
-                        </div>
-                      </div>
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Master Copier */}
-            <Card className="premium-card" data-testid="master-copier-card">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">Master Copier</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Bot className="text-primary h-8 w-8" />
-                  </div>
-                  <div className="text-lg font-semibold mb-2">Origins and Balances V1.2</div>
-                  <div className="text-sm text-muted-foreground">Advanced algorithmic trading system</div>
-                </div>
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge className="bg-green-500/20 text-green-400" data-testid="copier-status">Active</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Connected Accounts</span>
-                    <span className="font-medium" data-testid="copier-accounts">
-                      {dashboardData?.tradingAccounts?.length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Performance</span>
-                    <span className="text-green-400 font-medium" data-testid="copier-performance">+15.2%</span>
-                  </div>
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90" data-testid="manage-copier">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Settings
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Referral Earnings */}
-            <Card className="premium-card" data-testid="referral-earnings-card">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">Recent Earnings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-6">
-                  <div className="text-3xl font-bold gradient-text mb-2" data-testid="monthly-earnings">
-                    ${dashboardData?.referralEarnings || '0.00'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total earned this month</div>
-                </div>
-                <div className="space-y-3">
-                  {dashboardData?.recentReferralEarnings?.length === 0 ? (
-                    <div className="text-center py-4" data-testid="no-earnings-message">
-                      <Award className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">No earnings yet</p>
+                      ))}
                     </div>
-                  ) : (
-                    dashboardData?.recentReferralEarnings?.slice(0, 3).map((earning: any, index: number) => (
-                      <div key={earning.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg" data-testid={`earning-${index}`}>
-                        <div>
-                          <div className="font-medium">{earning.broker}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {new Date(earning.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="text-green-400 font-semibold">+${earning.amount}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {dashboardData?.referralEarnings?.length > 3 && (
-                  <Button variant="ghost" className="w-full mt-4 text-primary hover:text-primary/80" data-testid="view-all-earnings">
-                    View All Earnings
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-serif font-bold gradient-text mb-4" data-testid="features-title">Premium Trading Features</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="features-description">
+              Experience the power of professional trading with our cutting-edge platform and exclusive features
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Link,
+                title: "Multi-Broker Integration",
+                description: "Connect your Exness, Bybit, and Binance accounts seamlessly for unified portfolio management and automated trading.",
+                color: "text-primary"
+              },
+              {
+                icon: Bot,
+                title: "AI Copy Trading",
+                description: "Advanced copy trading system that mirrors our master traders' strategies across all your connected accounts.",
+                color: "text-green-400"
+              },
+              {
+                icon: TrendingUp,
+                title: "Real-time Analytics",
+                description: "Get instant portfolio updates, performance metrics, and detailed analytics across all your trading accounts.",
+                color: "text-blue-400"
+              },
+              {
+                icon: Users,
+                title: "Referral Program",
+                description: "Earn 10% commission on fees from investors you refer. Build your network and grow your passive income.",
+                color: "text-purple-400"
+              },
+              {
+                icon: Shield,
+                title: "Bank-Level Security",
+                description: "Military-grade encryption, secure API connections, and advanced authentication to protect your investments.",
+                color: "text-orange-400"
+              },
+              {
+                icon: Headphones,
+                title: "24/7 Support",
+                description: "Premium support from our expert team, available around the clock to assist with your trading needs.",
+                color: "text-red-400"
+              }
+            ].map((feature, index) => (
+              <Card key={index} className="premium-card text-center" data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                <CardContent className="p-8">
+                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <feature.icon className={`${feature.color} h-8 w-8`} />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10"></div>
+        <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl lg:text-4xl font-serif font-bold gradient-text mb-6" data-testid="cta-title">
+            Ready to Elevate Your Trading?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto" data-testid="cta-description">
+            Join thousands of successful traders using our premium platform. Start earning today with our AI-powered copy trading system and lucrative referral program.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={handleGetStarted} 
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold transition-all transform hover:scale-105"
+              data-testid="cta-start-trading"
+            >
+              Start Trading Now
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="border-border hover:border-primary text-foreground px-8 py-4 text-lg font-semibold"
+              data-testid="cta-book-demo"
+            >
+              Book a Demo
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-muted/10 border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
+                  <ChartLine className="text-white h-4 w-4" />
+                </div>
+                <span className="text-xl font-serif font-bold gradient-text">AlvaCapital</span>
+              </div>
+              <p className="text-muted-foreground mb-4">Premium trading platform for professional investors and traders worldwide.</p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-twitter">
+                  <i className="fab fa-twitter text-xl"></i>
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-linkedin">
+                  <i className="fab fa-linkedin text-xl"></i>
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-telegram">
+                  <i className="fab fa-telegram text-xl"></i>
+                </a>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Platform</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-features">Features</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-pricing">Pricing</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-security">Security</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-api">API</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-help">Help Center</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-contact">Contact</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-community">Community</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-status">Status</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-privacy">Privacy</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-terms">Terms</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-license">License</a></li>
+                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-compliance">Compliance</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
+            <p data-testid="footer-copyright">&copy; 2025 AlvaCapital. All rights reserved. | Trading involves risk and may not be suitable for all investors.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
