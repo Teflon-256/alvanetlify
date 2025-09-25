@@ -5,9 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  publicDir: 'dist/public', // Point to dist/public for index.html
   build: {
     rollupOptions: {
-      external: ['axios']
-    }
-  }
+      external: ['axios'],
+    },
+    outDir: 'dist/public', // Output build files to dist/public
+  },
 });
