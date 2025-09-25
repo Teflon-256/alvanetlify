@@ -3,9 +3,9 @@ import { storage } from './storage';
 import { handleReplitAuth, isAuthenticated } from './replitAuth';
 import { randomBytes } from 'crypto';
 import {
-  InsertTradingAccount,
-  InsertReferralLink,
-  InsertMasterCopierConnection,
+  FullInsertTradingAccount,
+  FullInsertReferralLink,
+  FullInsertMasterCopierConnection,
 } from '../shared/schema';
 
 declare global {
