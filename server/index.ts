@@ -1,15 +1,13 @@
-import express from "express";
-import { router } from "./routes.js";
-import { setupAuth } from "./replitAuth.js";
-import serverless from "serverless-http";
+import express from 'express';
+import router from './routes';
+import { setupAuth } from './replitAuth';
+import serverless from 'serverless-http';
 
 const app = express();
 
+setupAuth(app);
 app.use(express.json());
-
-(async () => {
-  await setupAuth(app);
-  app.use(router); // Use the router directly
-})();
+app.use(router);
 
 export const handler = serverless(app);
+export default app;
