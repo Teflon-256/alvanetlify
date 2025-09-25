@@ -5,10 +5,10 @@ import {
   referralEarnings,
   masterCopierConnections,
   referralLinks,
-  UpsertUser,
-  InsertTradingAccount,
-  InsertReferralLink,
-  InsertMasterCopierConnection,
+  FullInserttUser,
+  FullInsertTradingAccount,
+  FullInsertReferralLink,
+  FullInsertMasterCopierConnection,
 } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 
