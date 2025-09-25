@@ -51,6 +51,57 @@ export const masterCopierConnections = pgTable('master_copier_connections', {
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
+export type FullInsertUser = {
+  id: string;
+  email: string;
+  referralCode: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  referredBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type FullInsertTradingAccount = {
+  id: string;
+  userId: string;
+  broker: string;
+  accountId: string;
+  accountName?: string | null;
+  balance?: string | null;
+  dailyPnL?: string | null;
+  copyStatus?: string | null;
+  isConnected?: boolean | null;
+  apiKeyEncrypted?: string | null;
+  lastSyncAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type FullInsertReferralLink = {
+  id: string;
+  userId: string;
+  broker: string;
+  referralUrl: string;
+  clickCount: number;
+  conversionCount: number;
+  isActive?: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type FullInsertMasterCopierConnection = {
+  id: string;
+  userId: string;
+  tradingAccountId: string;
+  masterAccountId: string;
+  copyRatio?: string | null;
+  isActive?: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 
 export const referralLinks = pgTable('referral_links', {
   id: text('id').primaryKey(),
