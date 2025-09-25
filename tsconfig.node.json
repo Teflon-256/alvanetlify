@@ -11,7 +11,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["client/src/*"],
-      "@assets/*": ["client/src/assets/*"]
+      "@assets/*": ["client/src/assets/*"],
+      "@generated_images/*": ["client/src/generated_images/*"]
     }
   },
   "include": ["client/src/**/*"],
