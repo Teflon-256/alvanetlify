@@ -5,7 +5,7 @@ import {
   referralEarnings,
   masterCopierConnections,
   referralLinks,
-  InsertUser,
+  UpsertUser,
   InsertTradingAccount,
   InsertReferralLink,
   InsertMasterCopierConnection,
@@ -18,7 +18,7 @@ export const storage = {
     return result[0];
   },
 
-  upsertUser: async (data: InsertUser) => {
+  upsertUser: async (data: UpsertUser) => {
     await db
       .insert(users)
       .values(data)
@@ -125,3 +125,4 @@ export const storage = {
       .where(eq(masterCopierConnections.id, connectionId));
   },
 };
+
