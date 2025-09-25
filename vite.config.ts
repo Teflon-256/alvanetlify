@@ -5,12 +5,12 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  root: 'client', // Set root to client/ where index.html is
+  root: 'client',
   build: {
     rollupOptions: {
       external: ['axios'],
     },
-    outDir: '../dist/public', // Output to dist/public relative to client/
-    emptyOutDir: true, // Clear dist/public before building
+    outDir: '../dist/public',
+    emptyOutDir: true,
   },
 });
