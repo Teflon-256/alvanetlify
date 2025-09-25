@@ -1,326 +1,186 @@
-import { Router, Request, Response } from "express";
-import { z } from "zod";
-import { storage } from "./storage.js";
-import { isAuthenticated } from "./replitAuth.js";
-import {
-  type User,
-  type TradingAccount,
-  type ReferralEarning,
-  type MasterCopierConnection,
-  type ReferralLink,
-  type InsertTradingAccount,
-  type InsertReferralEarning,
-  type InsertMasterCopierConnection,
-  type InsertReferralLink,
-} from "@shared/schema";
-import { nanoid } from "nanoid";
+import express from 'express';
+import { storage } from './storage';
+import { handleReplitAuth, isAuthenticated } from './replitAuth';
+import { randomBytes } from 'crypto';
 
-export const router = Router();
-
-// User routes
-router.get("/user", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id: string; email: string };
     }
-    const user = await storage.getUser(userId);
+  }
+}
+
+const router = express.Router();
+
+router.get('/api/auth/replit', async (req, res) => {
+  try {
+    const userInfo = {
+      id: req.query.id as string,
+      email: req.query.email as string,
+    };
+    if (!userInfo.id || !userInfo.email) {
+      return res.status(400).json({ error: 'Missing user info' });
+    }
+    const user = await handleReplitAuth(userInfo);
+    res.json(user);
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+router.get('/api/user', isAuthenticated, async (req, res) => {
+  try {
+    const user = await storage.getUser(req.user!.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ error: 'User not found' });
     }
     res.json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
-router.put("/user", isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/trading-accounts', isAuthenticated, async (req, res) => {
   try {
-    const userData = req.body;
-    userData.id = (req.user as any)?.claims?.sub;
-    if (!userData.id) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const user = await storage.upsertUser(userData);
-    res.json(user);
+    const accounts = await storage.getTradingAccounts(req.user!.id);
+    res.json(accounts);
   } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching trading accounts:', error);
+    res.status(500).json({ error: 'Failed to fetch trading accounts' });
   }
 });
 
-// Trading account routes
-router.get("/trading-accounts", isAuthenticated, async (req: Request, res: Response) => {
+router.post('/api/trading-accounts', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const accounts = await storage.getTradingAccounts(userId);
-    
-    // Calculate aggregated metrics
-    const totalBalance = accounts.reduce((sum: number, account: TradingAccount) => sum + parseFloat(account.balance || "0"), 0).toFixed(2);
-    const totalDailyPnL = accounts.reduce((sum: number, account: TradingAccount) => sum + parseFloat(account.dailyPnL || "0"), 0).toFixed(2);
-    
-    res.json({
-      accounts,
-      metrics: {
-        totalBalance,
-        totalDailyPnL,
-        accountCount: accounts.length,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching trading accounts:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.post("/trading-accounts", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const accountData: InsertTradingAccount = {
-      ...req.body,
-      id: nanoid(),
-      userId,
+    const { broker, accountId, accountName, balance, dailyPnL, copyStatus, isConnected, apiKeyEncrypted } = req.body;
+    const account = await storage.createTradingAccount({
+      id: randomBytes(16).toString('hex'),
+      userId: req.user!.id,
+      broker,
+      accountId,
+      accountName,
+      balance,
+      dailyPnL,
+      copyStatus,
+      isConnected,
+      apiKeyEncrypted,
+      lastSyncAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
-    const account = await storage.createTradingAccount(accountData);
-    res.status(201).json(account);
-  } catch (error) {
-    console.error("Error creating trading account:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.put("/trading-accounts/:id", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const { id } = req.params;
-    const { balance, dailyPnL } = req.body;
-    await storage.updateTradingAccountBalance(id, balance, dailyPnL);
-    res.json({ message: "Account updated successfully" });
-  } catch (error) {
-    console.error("Error updating trading account:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.delete("/trading-accounts/:id", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const { id } = req.params;
-    await storage.deleteTradingAccount(id, userId);
-    res.json({ message: "Account deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting trading account:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// Referral earnings routes
-router.get("/referral-earnings", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const earnings = await storage.getReferralEarnings(userId);
-    const totalEarnings = await storage.getTotalReferralEarnings(userId);
-    const referralCount = await storage.getReferralCount(userId);
-    
-    res.json({
-      earnings,
-      metrics: {
-        totalEarnings: totalEarnings.total,
-        referralCount: referralCount.count,
-      },
     });
+    res.json(account);
   } catch (error) {
-    console.error("Error fetching referral earnings:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error creating trading account:', error);
+    res.status(500).json({ error: 'Failed to create trading account' });
   }
 });
 
-router.post("/referral-earnings", isAuthenticated, async (req: Request, res: Response) => {
+router.delete('/api/trading-accounts/:accountId', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const earningData: InsertReferralEarning = {
-      ...req.body,
-      id: nanoid(),
-      referrerId: userId,
-      createdAt: new Date(),
-    };
-    const earning = await storage.createReferralEarning(earningData);
-    res.status(201).json(earning);
+    await storage.deleteTradingAccount(req.params.accountId, req.user!.id);
+    res.json({ success: true });
   } catch (error) {
-    console.error("Error creating referral earning:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error deleting trading account:', error);
+    res.status(500).json({ error: 'Failed to delete trading account' });
   }
 });
 
-// Master copier connections routes
-router.get("/master-copier-connections", isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/referral-earnings', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const connections = await storage.getMasterCopierConnections(userId);
-    res.json(connections);
+    const earnings = await storage.getReferralEarnings(req.user!.id);
+    res.json(earnings);
   } catch (error) {
-    console.error("Error fetching master copier connections:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching referral earnings:', error);
+    res.status(500).json({ error: 'Failed to fetch referral earnings' });
   }
 });
 
-router.post("/master-copier-connections", isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/referral-links', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const connectionData: InsertMasterCopierConnection = {
-      ...req.body,
-      id: nanoid(),
-      userId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    const connection = await storage.createMasterCopierConnection(connectionData);
-    res.status(201).json(connection);
-  } catch (error) {
-    console.error("Error creating master copier connection:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.put("/master-copier-connections/:id", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const { id } = req.params;
-    const { isActive } = req.body;
-    await storage.updateMasterCopierStatus(id, isActive);
-    res.json({ message: "Connection status updated successfully" });
-  } catch (error) {
-    console.error("Error updating master copier connection:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// Referral links routes
-router.get("/referral-links", isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const links = await storage.getReferralLinks(userId);
+    const links = await storage.getReferralLinks(req.user!.id);
     res.json(links);
   } catch (error) {
-    console.error("Error fetching referral links:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching referral links:', error);
+    res.status(500).json({ error: 'Failed to fetch referral links' });
   }
 });
 
-router.post("/referral-links", isAuthenticated, async (req: Request, res: Response) => {
+router.post('/api/referral-links', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const linkData: InsertReferralLink = {
-      ...req.body,
-      id: nanoid(),
-      userId,
+    const { broker, referralUrl } = req.body;
+    const link = await storage.createReferralLink({
+      id: randomBytes(16).toString('hex'),
+      userId: req.user!.id,
+      broker,
+      referralUrl,
+      clickCount: 0,
+      conversionCount: 0,
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
-    const link = await storage.createReferralLink(linkData);
-    res.status(201).json(link);
+    });
+    res.json(link);
   } catch (error) {
-    console.error("Error creating referral link:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error creating referral link:', error);
+    res.status(500).json({ error: 'Failed to create referral link' });
   }
 });
 
-router.put("/referral-links/:id", isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/referral-stats', isAuthenticated, async (req, res) => {
   try {
-    const userId = (req.user as any)?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
-    const { id } = req.params;
-    const { clicks, conversions } = req.body;
-    await storage.updateReferralLinkStats(id, clicks, conversions);
-    res.json({ message: "Referral link stats updated successfully" });
+    const [totalEarnings, referralCount] = await Promise.all([
+      storage.getTotalReferralEarnings(req.user!.id),
+      storage.getReferralCount(req.user!.id),
+    ]);
+    res.json({ totalEarnings, referralCount });
   } catch (error) {
-    console.error("Error updating referral link stats:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching referral stats:', error);
+    res.status(500).json({ error: 'Failed to fetch referral stats' });
   }
 });
 
-// Input validation middleware
-const validate = (schema: z.ZodSchema) => (req: Request, res: Response, next: Function) => {
+router.get('/api/master-copier-connections', isAuthenticated, async (req, res) => {
   try {
-    schema.parse(req.body);
-    next();
+    const connections = await storage.getMasterCopierConnections(req.user!.id);
+    res.json(connections);
   } catch (error) {
-    res.status(400).json({ message: "Invalid request data", error });
+    console.error('Error fetching master copier connections:', error);
+    res.status(500).json({ error: 'Failed to fetch master copier connections' });
   }
-};
-
-// Example schemas for validation
-const userSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  profileImageUrl: z.string().optional(),
 });
 
-const tradingAccountSchema = z.object({
-  broker: z.enum(["exness", "bybit", "binance"]),
-  accountNumber: z.string(),
-  balance: z.string(),
-  dailyPnL: z.string().optional(),
+router.post('/api/master-copier-connections', isAuthenticated, async (req, res) => {
+  try {
+    const { tradingAccountId, masterAccountId, copyRatio, isActive } = req.body;
+    const connection = await storage.createMasterCopierConnection({
+      id: randomBytes(16).toString('hex'),
+      userId: req.user!.id,
+      tradingAccountId,
+      masterAccountId,
+      copyRatio,
+      isActive,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    res.json(connection);
+  } catch (error) {
+    console.error('Error creating master copier connection:', error);
+    res.status(500).json({ error: 'Failed to create master copier connection' });
+  }
 });
 
-const referralEarningSchema = z.object({
-  referredUserId: z.string(),
-  amount: z.string(),
-  status: z.enum(["pending", "paid"]),
+router.patch('/api/master-copier-connections/:connectionId', isAuthenticated, async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    await storage.updateMasterCopierStatus(req.params.connectionId, isActive);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating master copier connection:', error);
+    res.status(500).json({ error: 'Failed to update master copier connection' });
+  }
 });
 
-const masterCopierConnectionSchema = z.object({
-  masterAccountId: z.string(),
-  isActive: z.boolean(),
-});
-
-const referralLinkSchema = z.object({
-  broker: z.enum(["exness", "bybit", "binance"]),
-  referralUrl: z.string().url(),
-});
-
-// Apply validation middleware
-router.put("/user", validate(userSchema), router.put("/user"));
-router.post("/trading-accounts", validate(tradingAccountSchema), router.post("/trading-accounts"));
-router.post("/referral-earnings", validate(referralEarningSchema), router.post("/referral-earnings"));
-router.post("/master-copier-connections", validate(masterCopierConnectionSchema), router.post("/master-copier-connections"));
-router.post("/referral-links", validate(referralLinkSchema), router.post("/referral-links"));
+export default router;
