@@ -5,7 +5,7 @@ import {
   referralEarnings,
   masterCopierConnections,
   referralLinks,
-  FullInserttUser,
+  FullInsertUser,
   FullInsertTradingAccount,
   FullInsertReferralLink,
   FullInsertMasterCopierConnection,
@@ -18,7 +18,7 @@ export const storage = {
     return result[0];
   },
 
-  upsertUser: async (data: UpsertUser) => {
+  upsertUser: async (data: FullInsertUser) => {
     await db
       .insert(users)
       .values(data)
@@ -38,7 +38,7 @@ export const storage = {
     return result[0];
   },
 
-  createTradingAccount: async (data: InsertTradingAccount) => {
+  createTradingAccount: async (data: FullInsertTradingAccount) => {
     await db.insert(tradingAccounts).values(data);
     const result = await db
       .select()
@@ -93,7 +93,7 @@ export const storage = {
       .where(eq(referralLinks.userId, userId));
   },
 
-  createReferralLink: async (data: InsertReferralLink) => {
+  createReferralLink: async (data: FullInsertReferralLink) => {
     await db.insert(referralLinks).values(data);
     const result = await db
       .select()
@@ -109,7 +109,7 @@ export const storage = {
       .where(eq(masterCopierConnections.userId, userId));
   },
 
-  createMasterCopierConnection: async (data: InsertMasterCopierConnection) => {
+  createMasterCopierConnection: async (data: FullInsertMasterCopierConnection) => {
     await db.insert(masterCopierConnections).values(data);
     const result = await db
       .select()
