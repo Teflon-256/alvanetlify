@@ -2,3 +2,9 @@
   command = "npm run build"
   publish = "dist/public"
   functions = "dist"
+  environment = { DATABASE_URL = "", REPLIT_DOMAINS = "" }
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/index/api/:splat"
+  status = 200
