@@ -18,5 +18,6 @@ export default defineConfig({
     },
     outDir: '../dist/public',
     emptyOutDir: true,
+    assetsInlineLimit: 0, // Ensure large assets are not inlined
   },
 });
