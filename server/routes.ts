@@ -60,7 +60,17 @@ router.get('/api/trading-accounts', isAuthenticated, async (req, res) => {
 
 router.post('/api/trading-accounts', isAuthenticated, async (req, res) => {
   try {
-    const { broker, accountId, accountName, balance, dailyPnL, copyStatus, isConnected, apiKeyEncrypted } = req.body;
+    const {
+      broker,
+      accountId,
+      accountName,
+      balance,
+      dailyPnL,
+      copyStatus,
+      isConnected,
+      apiKeyEncrypted,
+    } = req.body;
+
     const account: InsertTradingAccount = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
@@ -76,6 +86,7 @@ router.post('/api/trading-accounts', isAuthenticated, async (req, res) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
     const result = await storage.createTradingAccount(account);
     res.json(result);
   } catch (error) {
@@ -117,6 +128,7 @@ router.get('/api/referral-links', isAuthenticated, async (req, res) => {
 router.post('/api/referral-links', isAuthenticated, async (req, res) => {
   try {
     const { broker, referralUrl } = req.body;
+
     const link: InsertReferralLink = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
@@ -128,6 +140,7 @@ router.post('/api/referral-links', isAuthenticated, async (req, res) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
     const result = await storage.createReferralLink(link);
     res.json(result);
   } catch (error) {
@@ -162,6 +175,7 @@ router.get('/api/master-copier-connections', isAuthenticated, async (req, res) =
 router.post('/api/master-copier-connections', isAuthenticated, async (req, res) => {
   try {
     const { tradingAccountId, masterAccountId, copyRatio, isActive } = req.body;
+
     const connection: InsertMasterCopierConnection = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
@@ -172,6 +186,7 @@ router.post('/api/master-copier-connections', isAuthenticated, async (req, res) 
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
     const result = await storage.createMasterCopierConnection(connection);
     res.json(result);
   } catch (error) {
