@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "types": ["node"],
+    "types": ["node", "express"],
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "baseUrl": ".",
