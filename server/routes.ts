@@ -2,6 +2,11 @@ import express from 'express';
 import { storage } from './storage';
 import { handleReplitAuth, isAuthenticated } from './replitAuth';
 import { randomBytes } from 'crypto';
+import {
+  InsertTradingAccount,
+  InsertReferralLink,
+  InsertMasterCopierConnection,
+} from '../shared/schema';
 
 declare global {
   namespace Express {
@@ -56,7 +61,7 @@ router.get('/api/trading-accounts', isAuthenticated, async (req, res) => {
 router.post('/api/trading-accounts', isAuthenticated, async (req, res) => {
   try {
     const { broker, accountId, accountName, balance, dailyPnL, copyStatus, isConnected, apiKeyEncrypted } = req.body;
-    const account = await storage.createTradingAccount({
+    const account: InsertTradingAccount = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
       broker,
@@ -70,8 +75,9 @@ router.post('/api/trading-accounts', isAuthenticated, async (req, res) => {
       lastSyncAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
-    res.json(account);
+    };
+    const result = await storage.createTradingAccount(account);
+    res.json(result);
   } catch (error) {
     console.error('Error creating trading account:', error);
     res.status(500).json({ error: 'Failed to create trading account' });
@@ -111,7 +117,7 @@ router.get('/api/referral-links', isAuthenticated, async (req, res) => {
 router.post('/api/referral-links', isAuthenticated, async (req, res) => {
   try {
     const { broker, referralUrl } = req.body;
-    const link = await storage.createReferralLink({
+    const link: InsertReferralLink = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
       broker,
@@ -121,8 +127,9 @@ router.post('/api/referral-links', isAuthenticated, async (req, res) => {
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
-    res.json(link);
+    };
+    const result = await storage.createReferralLink(link);
+    res.json(result);
   } catch (error) {
     console.error('Error creating referral link:', error);
     res.status(500).json({ error: 'Failed to create referral link' });
@@ -155,7 +162,7 @@ router.get('/api/master-copier-connections', isAuthenticated, async (req, res) =
 router.post('/api/master-copier-connections', isAuthenticated, async (req, res) => {
   try {
     const { tradingAccountId, masterAccountId, copyRatio, isActive } = req.body;
-    const connection = await storage.createMasterCopierConnection({
+    const connection: InsertMasterCopierConnection = {
       id: randomBytes(16).toString('hex'),
       userId: req.user!.id,
       tradingAccountId,
@@ -164,8 +171,9 @@ router.post('/api/master-copier-connections', isAuthenticated, async (req, res) 
       isActive,
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
-    res.json(connection);
+    };
+    const result = await storage.createMasterCopierConnection(connection);
+    res.json(result);
   } catch (error) {
     console.error('Error creating master copier connection:', error);
     res.status(500).json({ error: 'Failed to create master copier connection' });
