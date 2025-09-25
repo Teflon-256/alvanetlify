@@ -14,10 +14,10 @@ import {
   type InsertMasterCopierConnection,
   type ReferralLink,
   type InsertReferralLink,
-} from "@shared/schema";
-import { db } from "./db.js";
-import { eq, and, sql, desc } from "drizzle-orm";
-import { randomBytes } from "crypto";
+} from '@shared/schema';
+import { db } from './db';
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -44,7 +44,7 @@ export class DatabaseStorage implements IStorage {
       const result = await db.select().from(users).where(eq(users.id, id)).execute();
       return result[0] || undefined;
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error('Error fetching user:', error);
       return undefined;
     }
   }
@@ -75,13 +75,11 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       const user = result[0];
-      if (user) {
-        await this.createDefaultReferralLinks(user.id);
-      }
+      await this.createDefaultReferralLinks(user.id);
       return user;
     } catch (error) {
-      console.error("Error upserting user:", error);
-      throw new Error("Failed to upsert user");
+      console.error('Error upserting user:', error);
+      throw new Error('Failed to upsert user');
     }
   }
 
@@ -94,7 +92,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(tradingAccounts.createdAt))
         .execute();
     } catch (error) {
-      console.error("Error fetching trading accounts:", error);
+      console.error('Error fetching trading accounts:', error);
       return [];
     }
   }
@@ -121,8 +119,8 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newAccount;
     } catch (error) {
-      console.error("Error creating trading account:", error);
-      throw new Error("Failed to create trading account");
+      console.error('Error creating trading account:', error);
+      throw new Error('Failed to create trading account');
     }
   }
 
@@ -139,8 +137,8 @@ export class DatabaseStorage implements IStorage {
         .where(eq(tradingAccounts.id, accountId))
         .execute();
     } catch (error) {
-      console.error("Error updating trading account balance:", error);
-      throw new Error("Failed to update trading account balance");
+      console.error('Error updating trading account balance:', error);
+      throw new Error('Failed to update trading account balance');
     }
   }
 
@@ -148,14 +146,11 @@ export class DatabaseStorage implements IStorage {
     try {
       await db
         .delete(tradingAccounts)
-        .where(and(
-          eq(tradingAccounts.id, accountId),
-          eq(tradingAccounts.userId, userId)
-        ))
+        .where(and(eq(tradingAccounts.id, accountId), eq(tradingAccounts.userId, userId)))
         .execute();
     } catch (error) {
-      console.error("Error deleting trading account:", error);
-      throw new Error("Failed to delete trading account");
+      console.error('Error deleting trading account:', error);
+      throw new Error('Failed to delete trading account');
     }
   }
 
@@ -168,7 +163,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(referralEarnings.createdAt))
         .execute();
     } catch (error) {
-      console.error("Error fetching referral earnings:", error);
+      console.error('Error fetching referral earnings:', error);
       return [];
     }
   }
@@ -192,8 +187,8 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newEarning;
     } catch (error) {
-      console.error("Error creating referral earning:", error);
-      throw new Error("Failed to create referral earning");
+      console.error('Error creating referral earning:', error);
+      throw new Error('Failed to create referral earning');
     }
   }
 
@@ -201,17 +196,14 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), '0.00')::text`
+          total: sql<string>`COALESCE(SUM(${referralEarnings.amount}), '0.00')::text`,
         })
         .from(referralEarnings)
-        .where(and(
-          eq(referralEarnings.referrerId, userId),
-          eq(referralEarnings.status, 'paid')
-        ))
+        .where(and(eq(referralEarnings.referrerId, userId), eq(referralEarnings.status, 'paid')))
         .execute();
       return result[0] || { total: '0.00' };
     } catch (error) {
-      console.error("Error fetching total referral earnings:", error);
+      console.error('Error fetching total referral earnings:', error);
       return { total: '0.00' };
     }
   }
@@ -220,14 +212,14 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({
-          count: sql<number>`COUNT(DISTINCT ${referralEarnings.referredUserId})`
+          count: sql<number>`COUNT(DISTINCT ${referralEarnings.referredUserId})`,
         })
         .from(referralEarnings)
         .where(eq(referralEarnings.referrerId, userId))
         .execute();
       return result[0] || { count: 0 };
     } catch (error) {
-      console.error("Error fetching referral count:", error);
+      console.error('Error fetching referral count:', error);
       return { count: 0 };
     }
   }
@@ -241,12 +233,14 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(masterCopierConnections.createdAt))
         .execute();
     } catch (error) {
-      console.error("Error fetching master copier connections:", error);
+      console.error('Error fetching master copier connections:', error);
       return [];
     }
   }
 
-  async createMasterCopierConnection(connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date }): Promise<MasterCopierConnection> {
+  async createMasterCopierConnection(
+    connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date },
+  ): Promise<MasterCopierConnection> {
     try {
       const [newConnection] = await db
         .insert(masterCopierConnections)
@@ -263,8 +257,8 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newConnection;
     } catch (error) {
-      console.error("Error creating master copier connection:", error);
-      throw new Error("Failed to create master copier connection");
+      console.error('Error creating master copier connection:', error);
+      throw new Error('Failed to create master copier connection');
     }
   }
 
@@ -279,8 +273,8 @@ export class DatabaseStorage implements IStorage {
         .where(eq(masterCopierConnections.id, connectionId))
         .execute();
     } catch (error) {
-      console.error("Error updating master copier status:", error);
-      throw new Error("Failed to update master copier status");
+      console.error('Error updating master copier status:', error);
+      throw new Error('Failed to update master copier status');
     }
   }
 
@@ -293,7 +287,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(referralLinks.broker)
         .execute();
     } catch (error) {
-      console.error("Error fetching referral links:", error);
+      console.error('Error fetching referral links:', error);
       return [];
     }
   }
@@ -316,8 +310,8 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newLink;
     } catch (error) {
-      console.error("Error creating referral link:", error);
-      throw new Error("Failed to create referral link");
+      console.error('Error creating referral link:', error);
+      throw new Error('Failed to create referral link');
     }
   }
 
@@ -328,8 +322,8 @@ export class DatabaseStorage implements IStorage {
       if (conversions !== undefined) updateData.conversionCount = conversions;
       await db.update(referralLinks).set(updateData).where(eq(referralLinks.id, linkId)).execute();
     } catch (error) {
-      console.error("Error updating referral link stats:", error);
-      throw new Error("Failed to update referral link stats");
+      console.error('Error updating referral link stats:', error);
+      throw new Error('Failed to update referral link stats');
     }
   }
 
@@ -415,10 +409,12 @@ export class MemoryStorage implements IStorage {
   }
 
   async getTradingAccounts(userId: string): Promise<TradingAccount[]> {
-    return Array.from(this.tradingAccounts.values()).filter(acc => acc.userId === userId);
+    return Array.from(this.tradingAccounts.values()).filter((acc) => acc.userId === userId);
   }
 
-  async createTradingAccount(account: InsertTradingAccount & { id: string; createdAt: Date; updatedAt: Date }): Promise<TradingAccount> {
+  async createTradingAccount(
+    account: InsertTradingAccount & { id: string; createdAt: Date; updatedAt: Date },
+  ): Promise<TradingAccount> {
     const newAccount: TradingAccount = {
       ...account,
       accountName: account.accountName ?? null,
@@ -451,7 +447,7 @@ export class MemoryStorage implements IStorage {
   }
 
   async getReferralEarnings(userId: string): Promise<ReferralEarning[]> {
-    return Array.from(this.referralEarnings.values()).filter(earning => earning.referrerId === userId);
+    return Array.from(this.referralEarnings.values()).filter((earning) => earning.referrerId === userId);
   }
 
   async createReferralEarning(earning: InsertReferralEarning & { id: string; createdAt: Date }): Promise<ReferralEarning> {
@@ -466,8 +462,9 @@ export class MemoryStorage implements IStorage {
   }
 
   async getTotalReferralEarnings(userId: string): Promise<{ total: string }> {
-    const earnings = Array.from(this.referralEarnings.values())
-      .filter(e => e.referrerId === userId && e.status === 'paid');
+    const earnings = Array.from(this.referralEarnings.values()).filter(
+      (e) => e.referrerId === userId && e.status === 'paid',
+    );
     const total = earnings.reduce((sum, e) => sum + parseFloat(e.amount), 0).toFixed(2);
     return { total };
   }
@@ -475,17 +472,19 @@ export class MemoryStorage implements IStorage {
   async getReferralCount(userId: string): Promise<{ count: number }> {
     const referredUserIds = new Set(
       Array.from(this.referralEarnings.values())
-        .filter(e => e.referrerId === userId)
-        .map(e => e.referredUserId)
+        .filter((e) => e.referrerId === userId)
+        .map((e) => e.referredUserId),
     );
     return { count: referredUserIds.size };
   }
 
   async getMasterCopierConnections(userId: string): Promise<MasterCopierConnection[]> {
-    return Array.from(this.masterCopierConnections.values()).filter(conn => conn.userId === userId);
+    return Array.from(this.masterCopierConnections.values()).filter((conn) => conn.userId === userId);
   }
 
-  async createMasterCopierConnection(connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date }): Promise<MasterCopierConnection> {
+  async createMasterCopierConnection(
+    connection: InsertMasterCopierConnection & { id: string; createdAt: Date; updatedAt: Date },
+  ): Promise<MasterCopierConnection> {
     const newConnection: MasterCopierConnection = {
       ...connection,
       copyRatio: connection.copyRatio ?? null,
@@ -504,7 +503,7 @@ export class MemoryStorage implements IStorage {
   }
 
   async getReferralLinks(userId: string): Promise<ReferralLink[]> {
-    return Array.from(this.referralLinks.values()).filter(link => link.userId === userId);
+    return Array.from(this.referralLinks.values()).filter((link) => link.userId === userId);
   }
 
   async createReferralLink(link: InsertReferralLink & { id: string; createdAt: Date; updatedAt: Date }): Promise<ReferralLink> {
