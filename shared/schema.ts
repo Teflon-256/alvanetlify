@@ -47,10 +47,23 @@ export const masterCopierConnections = pgTable('master_copier_connections', {
   tradingAccountId: text('trading_account_id').notNull().references(() => tradingAccounts.id),
   masterAccountId: text('master_account_id').notNull(),
   copyRatio: text('copy_ratio'),
+  isActive: boolean('is_active').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull(),
+});
+
+export const referralLinks = pgTable('referral_links', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  broker: text('broker').notNull(),
+  referralUrl: text('referral_url').notNull(),
+  clickCount: serial('click_count').notNull().default(0),
+  conversionCount: serial('conversion_count').notNull().default(0),
   isActive: boolean('is_active'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
+
 export type FullInsertUser = {
   id: string;
   email: string;
@@ -97,23 +110,10 @@ export type FullInsertMasterCopierConnection = {
   tradingAccountId: string;
   masterAccountId: string;
   copyRatio?: string | null;
-  isActive?: boolean | null;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
-
-
-export const referralLinks = pgTable('referral_links', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id),
-  broker: text('broker').notNull(),
-  referralUrl: text('referral_url').notNull(),
-  clickCount: serial('click_count').notNull().default(0),
-  conversionCount: serial('conversion_count').notNull().default(0),
-  isActive: boolean('is_active'),
-  createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-});
 
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
