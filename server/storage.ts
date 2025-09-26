@@ -116,7 +116,6 @@ export const storage = {
   updateMasterCopierStatus: async (connectionId: string, isActive: boolean) => {
     await db
       .update(masterCopierConnections)
-      .set({ isActive: isActive as boolean })
+      .set({ isActive: isActive })
       .where(eq(masterCopierConnections.id, connectionId));
   },
-};
