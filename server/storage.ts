@@ -118,4 +118,5 @@ export const storage = {
       .update(masterCopierConnections)
       .set({ isActive: isActive })
       .where(eq(masterCopierConnections.id, connectionId));
-  },
+  }
+};
