@@ -16,4 +16,9 @@
 
 [functions]
 node_bundler = "esbuild"
-external_node_modules = ["@replit/vite-plugin-cartographer"]
+external_node_modules = [
+  "@replit/vite-plugin-cartographer",
+  "openid-client",
+  "@babel/preset-typescript",
+  "lightningcss"
+]
