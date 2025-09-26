@@ -16,9 +16,13 @@
 
 [functions]
 node_bundler = "esbuild"
+
+[functions."index"]
+included_files = ["dist/index.mjs"]
 external_node_modules = [
   "@replit/vite-plugin-cartographer",
   "openid-client",
   "@babel/preset-typescript",
-  "lightningcss"
+  "lightningcss",
+  "esbuild"
 ]
